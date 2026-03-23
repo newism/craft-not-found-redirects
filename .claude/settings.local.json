@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer check-cs:*)",
+      "Bash(ddev composer:*)",
+      "WebSearch",
+      "WebFetch(domain:www.screamingfrog.co.uk)",
+      "Bash(ddev craft:*)",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__list_pages",
+      "Bash(pkill -f \"chrome-devtools-mcp\")",
+      "Bash(ddev exec:*)",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__handle_dialog",
+      "mcp__chrome-devtools__list_console_messages",
+      "Read(//Users/leevigraham/Sites/newism/craft-members/**)",
+      "Bash(ddev mysql:*)",
+      "Bash(ddev psql:*)",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}

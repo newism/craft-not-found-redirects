@@ -1,0 +1,82 @@
+{% import '_includes/forms.twig' as forms %}
+
+<div>
+    <p>Upload a CSV file to import redirect rules. The CSV must have a header row with these column names:</p>
+    <table class="data fullwidth editable">
+        <thead>
+            <tr>
+                <th>Column</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>From</code></td>
+                <td>Yes</td>
+                <td>The URI pattern to match</td>
+            </tr>
+            <tr>
+                <td><code>To</code></td>
+                <td>No</td>
+                <td>The destination URI or full URL (empty for 410 Gone)</td>
+            </tr>
+            <tr>
+                <td><code>To Type</code></td>
+                <td>No</td>
+                <td><code>url</code> or <code>entry</code> (default: url)</td>
+            </tr>
+            <tr>
+                <td><code>To Element ID</code></td>
+                <td>No</td>
+                <td>Entry element ID (when To Type is <code>entry</code>)</td>
+            </tr>
+            <tr>
+                <td><code>Status Code</code></td>
+                <td>No</td>
+                <td>301, 302, 307, or 410 (default: 302)</td>
+            </tr>
+            <tr>
+                <td><code>Priority</code></td>
+                <td>No</td>
+                <td>Higher = checked first (default: 0)</td>
+            </tr>
+            <tr>
+                <td><code>Enabled</code></td>
+                <td>No</td>
+                <td>true/false or 1/0 (default: true)</td>
+            </tr>
+            <tr>
+                <td><code>System Generated</code></td>
+                <td>No</td>
+                <td>true/false or 1/0 (default: false)</td>
+            </tr>
+            <tr>
+                <td><code>Start Date</code></td>
+                <td>No</td>
+                <td>Date/time the redirect becomes active</td>
+            </tr>
+            <tr>
+                <td><code>End Date</code></td>
+                <td>No</td>
+                <td>Date/time the redirect stops being active</td>
+            </tr>
+            <tr>
+                <td><code>Note</code></td>
+                <td>No</td>
+                <td>A note to attach to the redirect</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<hr>
+
+{{ forms.fileField({
+    label: 'CSV File',
+    instructions: 'Select a .csv file to import.',
+    id: 'file',
+    name: 'file',
+    accept: '.csv',
+    required: true,
+}) }}

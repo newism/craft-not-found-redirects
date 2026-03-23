@@ -1,0 +1,39 @@
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') %}
+
+<div id="notfound-vue-admin-table"></div>
+
+{% js %}
+(() => {
+    const columns = [
+        { name: '__slot:title', title: Craft.t('app', 'URI'), sortField: 'uri' },
+        { name: 'hitCount', title: Craft.t('app', 'Hits'), sortField: true },
+        { name: 'referrers', title: Craft.t('app', 'Referrers'), sortField: true },
+        {
+            name: 'handled',
+            title: Craft.t('app', 'Handled'),
+            callback: (value) => value
+                ? '<span class="status enabled"></span>'
+                : '<span class="status disabled"></span>',
+        },
+        { name: 'redirect', title: Craft.t('app', 'Redirect') },
+    ];
+
+    const config = {
+        columns,
+        container: '#notfound-vue-admin-table',
+        emptyMessage: Craft.t('app', 'No 404s recorded yet.'),
+        tableDataEndpoint: Craft.getActionUrl('not-found-redirects/not-found-uris/table-data', { handled: '{{ handled is null ? "all" : (handled ? "1" : "0") }}' }),
+        search: true,
+        searchPlaceholder: Craft.t('app', 'Search URIs…'),
+        perPage: 50,
+        fullPane: false,
+    };
+
+    {% if canDelete404s %}
+    config.deleteAction = 'not-found-redirects/not-found-uris/delete';
+    config.deleteConfirmationMessage = Craft.t('app', 'Are you sure you want to delete this 404 record?');
+    {% endif %}
+
+    new Craft.VueAdminTable(config);
+})();
+{% endjs %}

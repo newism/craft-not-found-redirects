@@ -1,0 +1,16 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ hiddenInput('redirectId', redirectId) }}
+{{ hiddenInput('noteId', note.id) }}
+
+{{ forms.textareaField({
+    label: 'Note',
+    id: 'note',
+    name: 'note',
+    value: note.note,
+    rows: 4,
+    required: true,
+    first: true,
+    errors: note.getErrors('note'),
+    data: {'error-key': 'note'},
+}) }}

@@ -1,0 +1,18 @@
+{% include '_includes/nav.twig' with {
+    label: 'Redirects',
+    selectedItem: selectedItem,
+    items: {
+        allRedirects: {
+            label: 'All',
+            url: 'not-found-redirects/redirects',
+        },
+        manual: {
+            label: 'Manual',
+            url: 'not-found-redirects/redirects?systemGenerated=0',
+        },
+        auto: {
+            label: 'System Generated',
+            url: 'not-found-redirects/redirects?systemGenerated=1',
+        },
+    },
+} only %}

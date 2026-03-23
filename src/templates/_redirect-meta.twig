@@ -1,0 +1,95 @@
+{% if redirect.id %}
+    <dl class="meta read-only">
+        <div class="data">
+            <dt class="heading">ID</dt>
+            <dd class="value"><code>{{ redirect.id }}</code></dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Status</dt>
+            <dd class="value">
+                <span class="status {{ redirect.status }}"></span>
+                {{ redirect.status|capitalize }}
+            </dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Hits</dt>
+            <dd class="value">{{ redirect.hitCount }}</dd>
+        </div>
+        {% if redirect.hitLastTime %}
+            <div class="data">
+                <dt class="heading">Last Hit</dt>
+                <dd class="value">{{ redirect.hitLastTime|timestamp }}</dd>
+            </div>
+        {% endif %}
+        <div class="data">
+            <dt class="heading">Created at</dt>
+            <dd class="value">{{ redirect.dateCreated|timestamp }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Created by</dt>
+            <dd class="value">
+                {% if redirect.createdBy %}
+                    {{ elementChip(redirect.createdBy, {size: 'small'}) }}
+                {% elseif redirect.createdById %}
+                    User #{{ redirect.createdById }} (deleted)
+                {% elseif redirect.systemGenerated %}
+                    System Generated
+                {% else %}
+                    &mdash;
+                {% endif %}
+            </dd>
+        </div>
+        {% if redirect.dateUpdated %}
+            <div class="data">
+                <dt class="heading">Updated at</dt>
+                <dd class="value">{{ redirect.dateUpdated|timestamp }}</dd>
+            </div>
+        {% endif %}
+        {% if redirect.toType == 'entry' %}
+            <div class="data">
+                <dt class="heading">Destination Entry</dt>
+                <dd class="value">
+                    {% if redirect.toElement %}
+                        {{ elementChip(redirect.toElement, {size: 'small'}) }}
+                    {% elseif redirect.toElementId %}
+                        Entry #{{ redirect.toElementId }} (deleted)
+                    {% else %}
+                        <span class="warning">Entry deleted — using cached URI</span>
+                    {% endif %}
+                </dd>
+            </div>
+        {% endif %}
+        {% if redirect.systemGenerated and redirect.elementId %}
+            <div class="data">
+                <dt class="heading">Source Element</dt>
+                <dd class="value">
+                    {% if redirect.element %}
+                        {{ elementChip(redirect.element, {size: 'small'}) }}
+                    {% else %}
+                        Element #{{ redirect.elementId }} (deleted)
+                    {% endif %}
+                </dd>
+            </div>
+        {% endif %}
+    </dl>
+
+    <hr>
+{% endif %}
+
+<div>
+    <h4>Pattern Matching</h4>
+    <p>Incoming URI and Destination URI support Craft CMS pattern matching.</p>
+    <button type="button" id="pattern-reference-btn" class="btn">View Pattern Reference</button>
+</div>
+
+{% js %}
+$('#details-container').find('.element.chip[data-id], .element.card[data-id]').on('dblclick', function() {
+    new Craft.ElementEditorSlideout(this);
+});
+
+$('#pattern-reference-btn').on('click', function() {
+    new Craft.CpScreenSlideout('not-found-redirects/redirects/pattern-reference', {
+        containerElement: 'div',
+    });
+});
+{% endjs %}

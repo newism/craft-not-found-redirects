@@ -1,0 +1,53 @@
+{
+  "name": "newism/craft-not-found-redirects",
+  "description": "Catches 404 errors, logs them, and redirects visitors based on configurable rules",
+  "type": "craft-plugin",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Leevi Graham",
+      "email": "leevi@newism.com.au"
+    }
+  ],
+  "support": {
+    "email": "support@newism.com.au",
+    "source": "https://github.com/newism/craft-not-found-redirects",
+    "docs": "https://github.com/newism/craft-not-found-redirects"
+  },
+  "require": {
+    "php": ">=8.4",
+    "craftcms/cms": "^5.9.0",
+    "league/csv": "^9.0"
+  },
+  "require-dev": {
+    "craftcms/ecs": "dev-main",
+    "craftcms/phpstan": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "newism\\notfoundredirects\\": "src/"
+    }
+  },
+  "extra": {
+    "handle": "not-found-redirects",
+    "name": "404 Redirects",
+    "developer": "Newism",
+    "documentationUrl": "https://github.com/newism/craft-not-found-redirects",
+    "class": "newism\\notfoundredirects\\NotFoundRedirects"
+  },
+  "scripts": {
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix",
+    "phpstan": "phpstan --memory-limit=1G"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.4"
+    },
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') %}
+
+<div>
+    <table class="data editable fullwidth">
+        <tbody>
+            <tr>
+                <th scope="row">URI</th>
+                <td><code>/{{ notFound.uri }}</code></td>
+            </tr>
+            <tr>
+                <th scope="row">Full URL</th>
+                <td><code>{{ notFound.fullUrl }}</code></td>
+            </tr>
+            <tr>
+                <th scope="row">Hits</th>
+                <td>{{ notFound.hitCount }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Last Hit</th>
+                <td>{{ notFound.hitLastTime ? notFound.hitLastTime|timestamp : '-' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">First Seen</th>
+                <td>{{ notFound.dateCreated ? notFound.dateCreated|timestamp : '-' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Status</th>
+                <td>
+                    <span class="status {{ notFound.handled ? 'enabled' : 'disabled' }}"></span>
+                    {{ notFound.handled ? 'Handled' : 'Unhandled' }}
+                </td>
+            </tr>
+            {% if redirectInfo %}
+                <tr>
+                    <th scope="row">Redirect</th>
+                    <td>
+                        <a href="{{ redirectInfo.cpEditUrl }}">
+                            <code>/{{ redirectInfo.from }}</code> <span class="light">→</span> <code>{{ redirectInfo.to ? (redirectInfo.to starts with '/' ? redirectInfo.to : '/' ~ redirectInfo.to) : '(410 Gone)' }}</code>
+                            <span class="light">({{ redirectInfo.statusCode }})</span>
+                        </a>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<hr>
+
+<h2>Referrers</h2>
+
+{% if notFound.referrerCount > 0 %}
+    <div id="referrers-vue-admin-table"></div>
+
+    {% js %}
+    (() => {
+        const columns = [
+            { name: '__slot:title', title: Craft.t('app', 'Referrer'), sortField: true },
+            { name: 'hitCount', title: Craft.t('app', 'Hits'), sortField: true },
+            { name: 'hitLastTime', title: Craft.t('app', 'Last Hit'), sortField: true },
+        ];
+
+        new Craft.VueAdminTable({
+            columns,
+            container: '#referrers-vue-admin-table',
+            tableDataEndpoint: Craft.getActionUrl('not-found-redirects/not-found-uris/referrers-table-data', { notFoundId: {{ notFoundId }} }),
+            deleteAction: 'not-found-redirects/not-found-uris/delete-referrer',
+            deleteConfirmationMessage: Craft.t('app', 'Are you sure you want to delete this referrer?'),
+            perPage: 50,
+            fullPane: false,
+        });
+    })();
+    {% endjs %}
+{% else %}
+    <div class="zilch"><p>No referrers recorded for this 404.</p></div>
+{% endif %}

@@ -1,0 +1,13 @@
+<div class="meta read-only">
+    <h4 class="heading">Incoming Redirects</h4>
+    {% for redirect in redirects %}
+        <div class="data">
+            <dd class="value">
+                <a href="{{ redirect.cpEditUrl }}">
+                    <span class="status {{ redirect.status }}"></span>
+                    /{{ redirect.from }} → {{ redirect.statusCode }}
+                </a>
+            </dd>
+        </div>
+    {% endfor %}
+</div>

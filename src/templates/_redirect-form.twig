@@ -1,0 +1,191 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ hiddenInput('redirectId', redirect.id) }}
+
+<div>
+
+{% if sites|length > 1 %}
+    {{ forms.selectField({
+        label: 'Site',
+        instructions: 'Restrict this redirect to a specific site, or apply to all sites.',
+        id: 'siteId',
+        name: 'siteId',
+        value: redirect.siteId,
+        first: true,
+        options: [{ label: 'All Sites', value: '' }]|merge(
+            sites|map(s => { label: s.name, value: s.id })
+        ),
+    }) }}
+{% endif %}
+
+{{ forms.selectField({
+    label: 'Status Code',
+    id: 'statusCode',
+    name: 'statusCode',
+    value: redirect.statusCode,
+    first: sites|length == 1,
+    options: [
+        { label: '301 — Permanent Redirect', value: 301 },
+        { label: '302 — Temporary Redirect', value: 302 },
+        { label: '307 — Temporary Redirect (Preserve Method)', value: 307 },
+        { label: '410 — Gone (No Redirect)', value: 410 },
+    ],
+    errors: redirect.getErrors('statusCode'),
+}) }}
+
+{% set fromInput %}
+    <div class="url-field-container">
+        <div class="url-field-label"><span>/</span></div>
+        {{ forms.text({
+            id: 'from',
+            name: 'from',
+            value: redirect.from,
+            class: 'fullwidth',
+        }) }}
+    </div>
+{% endset %}
+{{ forms.field({
+    label: 'Incoming URI',
+    id: 'from',
+    required: true,
+    errors: redirect.getErrors('from'),
+}, fromInput) }}
+
+{# ── Destination (hidden when 410) ──────────────────────────────── #}
+
+<div id="destination-fields" class="{{ redirect.statusCode == 410 ? 'hidden' }}">
+    {% set destinationInput %}
+        <div class="flex">
+            {{ forms.select({
+                id: 'toType',
+                name: 'toType',
+                value: redirect.toType ?? 'url',
+                options: [
+                    { label: 'URL', value: 'url' },
+                    { label: 'Entry', value: 'entry' },
+                ],
+                toggle: true,
+                targetPrefix: 'toType-',
+            }) }}
+            <div id="toType-url" class="flex-grow {{ (redirect.toType ?? 'url') != 'url' ? 'hidden' }}">
+                {{ forms.text({
+                    id: 'to',
+                    name: 'to',
+                    value: redirect.to,
+                    class: 'fullwidth',
+                }) }}
+            </div>
+            <div id="toType-entry" class="flex-grow {{ (redirect.toType ?? 'url') != 'entry' ? 'hidden' }}">
+                {{ toElementSelectHtml|raw }}
+            </div>
+        </div>
+    {% endset %}
+    {{ forms.field({
+        label: 'Destination',
+        id: 'to',
+        errors: redirect.getErrors('to')|merge(redirect.getErrors('toElementId')),
+    }, destinationInput) }}
+</div>{# /destination-fields #}
+
+</div>{# /flex-fields #}
+
+<div class="field">
+<button type="button" class="fieldtoggle" data-target="advanced">{{ "Advanced"|t('app') }}</button>
+</div>
+
+<div id="advanced" class="hidden flex-fields">
+
+    {{ forms.textField({
+        label: 'Resolved Entry URI',
+        id: 'toElementUrl',
+        value: redirect.toElement ? '/' ~ redirect.toElement.uri : '',
+        readonly: true,
+        class: 'code',
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Enabled',
+        id: 'enabled',
+        name: 'enabled',
+        on: redirect.enabled,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Priority',
+        instructions: 'Higher priority rules are checked first. Default: 0.',
+        id: 'priority',
+        name: 'priority',
+        type: 'number',
+        value: redirect.priority,
+        size: 5,
+        errors: redirect.getErrors('priority'),
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'Start Date',
+        instructions: 'The redirect becomes active at this date/time.',
+        id: 'startDate',
+        name: 'startDate',
+        value: redirect.startDate,
+        errors: redirect.getErrors('startDate'),
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'End Date',
+        instructions: 'The redirect stops being active after this date/time.',
+        id: 'endDate',
+        name: 'endDate',
+        value: redirect.endDate,
+        errors: redirect.getErrors('endDate'),
+    }) }}
+
+</div>
+
+{# ── Notes ──────────────────────────────────────────────────────── #}
+
+<hr>
+
+{% if redirect.id %}
+<h4>Notes</h4>
+{% endif %}
+
+{% if redirect.id %}
+    <div id="notes-list">
+        {% for note in notes %}
+            <div class="note-card" data-note-id="{{ note.id }}">
+                <div class="note-card-header">
+                    <div class="note-card-author">
+                        {% if note.systemGenerated %}
+                            <div class="note-card-avatar note-card-avatar--system">S</div>
+                            <span class="light">System</span>
+                        {% elseif note.createdBy %}
+                            <div class="note-card-avatar">{{ note.createdBy.getThumbHtml(24)|raw }}</div>
+                            <span>{{ note.createdBy.friendlyName }}</span>
+                        {% else %}
+                            <div class="note-card-avatar note-card-avatar--system">?</div>
+                            <span class="light">Unknown</span>
+                        {% endif %}
+                        <span class="light">{{ note.dateCreated|timestamp('short') }}</span>
+                    </div>
+                    {% if not note.systemGenerated %}
+                        <div class="note-card-actions">
+                            <a href="#" class="note-edit" data-note-id="{{ note.id }}" title="Edit"><span data-icon="pencil"></span></a>
+                            <a href="#" class="note-delete" data-note-id="{{ note.id }}" title="Delete"><span data-icon="remove"></span></a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="note-card-body">{{ note.note|md(encode=true) }}</div>
+            </div>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 8px;">
+        <button type="button" id="add-note-btn" class="btn add icon">Add Note</button>
+    </div>
+{% else %}
+    {{ forms.textareaField({
+        label: 'Add a note',
+        id: 'newNote',
+        name: 'newNote',
+        rows: 3,
+    }) }}
+{% endif %}

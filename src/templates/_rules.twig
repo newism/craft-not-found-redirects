@@ -1,0 +1,47 @@
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') %}
+
+<div id="redirects-vue-admin-table"></div>
+
+{% js %}
+(() => {
+    const columns = [
+        { name: '__slot:title', title: Craft.t('app', 'From'), sortField: true },
+        { name: 'to', title: Craft.t('app', 'To'), sortField: true },
+        { name: 'statusCode', title: Craft.t('app', 'Status'), sortField: true },
+        {
+            name: 'status',
+            title: Craft.t('app', 'Status'),
+            sortField: true,
+            callback: (value) => {
+                const colors = {
+                    enabled: 'enabled',
+                    disabled: 'disabled',
+                    scheduled: 'pending',
+                    expired: 'off',
+                };
+                return '<span class="status ' + (colors[value] || 'disabled') + '"></span> ' + value;
+            },
+        },
+        { name: 'hitCount', title: Craft.t('app', 'Hits'), sortField: true },
+        { name: 'priority', title: Craft.t('app', 'Priority'), sortField: true },
+    ];
+
+    const config = {
+        columns,
+        container: '#redirects-vue-admin-table',
+        emptyMessage: Craft.t('app', 'No redirect rules yet.'),
+        tableDataEndpoint: Craft.getActionUrl('not-found-redirects/redirects/table-data', { systemGenerated: '{{ systemGenerated ?? "" }}' }),
+        search: true,
+        searchPlaceholder: Craft.t('app', 'Search redirects…'),
+        perPage: 50,
+        fullPane: false,
+    };
+
+    {% if canDeleteRedirects %}
+    config.deleteAction = 'not-found-redirects/redirects/delete';
+    config.deleteConfirmationMessage = Craft.t('app', 'Are you sure you want to delete this redirect?');
+    {% endif %}
+
+    new Craft.VueAdminTable(config);
+})();
+{% endjs %}

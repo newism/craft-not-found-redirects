@@ -1,0 +1,29 @@
+{% import '_includes/forms.twig' as forms %}
+
+{% if logFiles|length > 0 %}
+    <form method="get">
+        {{ forms.selectField({
+            label: 'Log File',
+            id: 'file',
+            name: 'file',
+            value: selected,
+            options: logFiles|map(f => { label: f, value: f }),
+        }) }}
+    </form>
+
+    {% js %}
+    $('#file').on('change', function() {
+        this.form.submit();
+    });
+    {% endjs %}
+
+    {% if content %}
+        <div style="margin-top: 16px;">
+            <pre style="background: var(--gray-050); border: 1px solid var(--hairline-color); border-radius: var(--medium-border-radius); padding: 16px; overflow-x: auto; font-size: 12px; line-height: 1.6; max-height: 600px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">{{ content }}</pre>
+        </div>
+    {% else %}
+        <div class="zilch"><p>Log file is empty.</p></div>
+    {% endif %}
+{% else %}
+    <div class="zilch"><p>No log files found.</p></div>
+{% endif %}

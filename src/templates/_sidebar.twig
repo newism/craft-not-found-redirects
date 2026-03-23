@@ -1,0 +1,18 @@
+{% include '_includes/nav.twig' with {
+    label: '404s',
+    selectedItem: selectedItem,
+    items: {
+        all404s: {
+            label: 'All',
+            url: 'not-found-redirects/404s?handled=all',
+        },
+        unhandled: {
+            label: 'Unhandled',
+            url: 'not-found-redirects/404s?handled=0',
+        },
+        handled: {
+            label: 'Handled',
+            url: 'not-found-redirects/404s?handled=1',
+        },
+    },
+} only %}

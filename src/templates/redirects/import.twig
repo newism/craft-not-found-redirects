@@ -1,0 +1,157 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'Source'|t('not-found-redirects'),
+    instructions: 'Select the source format of the CSV file.'|t('not-found-redirects'),
+    id: 'inputSource',
+    name: 'inputSource',
+    first: true,
+    value: importForm.inputSource,
+    options: [
+        { label: '404 Redirects'|t('not-found-redirects'), value: constant('newism\\notfoundredirects\\actions\\ImportAction::SOURCE_PLUGIN') },
+        { label: 'Retour', value: constant('newism\\notfoundredirects\\actions\\ImportAction::SOURCE_RETOUR') },
+    ],
+    toggle: true,
+    targetPrefix: 'source-',
+}) }}
+
+{{ forms.fileField({
+    label: 'File'|t('not-found-redirects'),
+    instructions: 'Select a .csv or .json file to import.'|t('not-found-redirects'),
+    id: 'file',
+    name: 'file',
+    accept: '.csv,.json',
+    required: true,
+    errors: importForm.getErrors('file'),
+    data: {'error-key': 'file'},
+}) }}
+
+<div id="source-native"{{ importForm.inputSource != 'native' ? ' class="hidden"' }}>
+    <p>{{ 'CSV or JSON file with the following columns:'|t('not-found-redirects') }}</p>
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Column</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">From</th>
+            <td>Yes</td>
+            <td></td>
+            <td>Incoming URI pattern</td>
+        </tr>
+        <tr>
+            <th scope="row">To</th>
+            <td>No</td>
+            <td>(empty)</td>
+            <td>Destination URI or URL</td>
+        </tr>
+        <tr>
+            <th scope="row">To Type</th>
+            <td>No</td>
+            <td>url</td>
+            <td><code>url</code> or <code>entry</code></td>
+        </tr>
+        <tr>
+            <th scope="row">To Element ID</th>
+            <td>No</td>
+            <td></td>
+            <td>Entry ID for entry-type redirects</td>
+        </tr>
+        <tr>
+            <th scope="row">Status Code</th>
+            <td>No</td>
+            <td>302</td>
+            <td>301, 302, 307, or 410</td>
+        </tr>
+        <tr>
+            <th scope="row">Priority</th>
+            <td>No</td>
+            <td>0</td>
+            <td>Higher = checked first</td>
+        </tr>
+        <tr>
+            <th scope="row">Enabled</th>
+            <td>No</td>
+            <td>TRUE</td>
+            <td>TRUE / FALSE</td>
+        </tr>
+        <tr>
+            <th scope="row">System Generated</th>
+            <td>No</td>
+            <td>FALSE</td>
+            <td>TRUE / FALSE</td>
+        </tr>
+        <tr>
+            <th scope="row">Start Date</th>
+            <td>No</td>
+            <td></td>
+            <td>Active from date/time</td>
+        </tr>
+        <tr>
+            <th scope="row">End Date</th>
+            <td>No</td>
+            <td></td>
+            <td>Active until date/time</td>
+        </tr>
+        <tr>
+            <th scope="row">Notes</th>
+            <td>No</td>
+            <td></td>
+            <td>Plain text or JSON array: <code>[{"note":"...","author":"...","date":"..."}]</code></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="source-retour"{{ importForm.inputSource != 'retour' ? ' class="hidden"' }}>
+    <p>{{ 'CSV exported from {link}Retour{linkEnd} with these columns:'|t('not-found-redirects', {
+        link: '<a href="https://github.com/nystudio107/craft-retour" target="_blank">',
+        linkEnd: '</a>',
+    })|raw }}</p>
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Column</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">Legacy URL Pattern</th>
+            <td>Yes</td>
+            <td>Incoming URI pattern</td>
+        </tr>
+        <tr>
+            <th scope="row">Redirect To</th>
+            <td>No</td>
+            <td>Destination URI or URL</td>
+        </tr>
+        <tr>
+            <th scope="row">Match Type</th>
+            <td>No</td>
+            <td><code>exactmatch</code> or <code>regexmatch</code></td>
+        </tr>
+        <tr>
+            <th scope="row">HTTP Status</th>
+            <td>No</td>
+            <td>301, 302, 307, or 410</td>
+        </tr>
+        <tr>
+            <th scope="row">Site ID</th>
+            <td>No</td>
+            <td>Site ID</td>
+        </tr>
+        <tr>
+            <th scope="row">Priority</th>
+            <td>No</td>
+            <td>Sort order (mapped to priority)</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

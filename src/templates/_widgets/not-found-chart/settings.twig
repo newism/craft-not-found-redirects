@@ -1,0 +1,25 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'Display'|t('not-found-redirects'),
+    id: 'display',
+    name: 'display',
+    value: widget.display,
+    options: [
+        { label: 'Per day'|t('not-found-redirects'), value: 'perDay' },
+        { label: 'Cumulative'|t('not-found-redirects'), value: 'cumulative' },
+    ],
+}) }}
+
+{{ forms.selectField({
+    label: 'Date Range'|t('not-found-redirects'),
+    id: 'dateRange',
+    name: 'dateRange',
+    value: widget.dateRange,
+    options: [
+        { label: 'Last 7 days'|t('not-found-redirects'), value: 'd7' },
+        { label: 'Last 30 days'|t('not-found-redirects'), value: 'd30' },
+        { label: 'Previous week'|t('not-found-redirects'), value: 'lastweek' },
+        { label: 'Previous month'|t('not-found-redirects'), value: 'lastmonth' },
+    ],
+}) }}

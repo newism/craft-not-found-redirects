@@ -1,0 +1,30 @@
+{% for note in notes %}
+    <div class="note-card" data-note-id="{{ note.id }}">
+        <div class="note-card-header">
+            <div class="note-card-author">
+                {% if note.systemGenerated %}
+                    <div class="note-card-avatar note-card-avatar--system thumb rounded">
+                        S
+                    </div>
+                    <span class="light">{{ 'System'|t('not-found-redirects') }}</span>
+                {% elseif note.createdBy %}
+                    <div class="note-card-avatar">{{ note.createdBy.getThumbHtml(24)|raw }}</div>
+                    <span>{{ note.createdBy.friendlyName }}</span>
+                {% else %}
+                    <div class="note-card-avatar note-card-avatar--system">?</div>
+                    <span class="light">{{ 'Unknown'|t('not-found-redirects') }}</span>
+                {% endif %}
+                <span class="light">{{ 'on {date}'|t('not-found-redirects', { date: note.dateCreated|datetime }) }}</span>
+            </div>
+            {% if not note.systemGenerated %}
+                <div class="note-card-actions">
+                    <a href="#" class="note-edit" data-note-id="{{ note.id }}" title="{{ 'Edit'|t('app') }}"><span
+                                data-icon="pencil"></span></a>
+                    <a href="#" class="note-delete" data-note-id="{{ note.id }}" title="{{ 'Delete'|t('app') }}"><span
+                                data-icon="remove"></span></a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="note-card-body">{{ note.note|md(encode=true) }}</div>
+    </div>
+{% endfor %}

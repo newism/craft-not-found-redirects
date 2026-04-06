@@ -1,0 +1,59 @@
+{% set canCreate = currentUser.can('not-found-redirects:manageRedirects') %}
+{% set multiSite = craft.app.sites.allSites|length > 1 %}
+
+{% if items|length %}
+    <div style="overflow-x: auto">
+        <table class="data">
+            <thead>
+            <tr>
+                <th scope="col">{{ 'URI'|t('not-found-redirects') }}</th>
+                {% if multiSite %}
+                    <th scope="col">{{ 'Site'|t('app') }}</th>
+                {% endif %}
+                <th scope="col">{{ 'Handled'|t('not-found-redirects') }}</th>
+                <th scope="col" style="text-align: right;">{{ 'Hits'|t('not-found-redirects') }}</th>
+                <th scope="col">{{ 'Last Seen'|t('not-found-redirects') }}</th>
+                {% if canCreate %}
+                    <th></th>{% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                <tr>
+                    <th scope="row" style="width: 100%">
+                        <div class="truncate">
+                            <a href="{{ cpUrl('not-found-redirects/404s/detail/' ~ item.id) }}">{{ item.uri ?: '/' }}</a>
+                        </div>
+                    </th>
+                    {% if multiSite %}
+                        <td>
+                            <div class="truncate">
+                                {{ craft.app.sites.getSiteById(item.siteId).name ?? '' }}
+                            </div>
+                        </td>
+                    {% endif %}
+                    <td style="text-align: center;">
+                        {{ handledHtmlMap[item.id]|raw }}
+                    </td>
+                    <td style="text-align: right;  font-variant: tabular-nums; ">{{ item.hitCount }}</td>
+                    <td class="light" style="white-space: nowrap;">
+                        {{ item.hitLastTime|datetime }}
+                    </td>
+                    {% if canCreate %}
+                        <td>
+                            {% if not item.handled %}
+                                <a href="{{ cpUrl('not-found-redirects/redirects/new', { from: item.uri, siteId: item.siteId }) }}"
+                                   class="add icon"
+                                   title="{{ 'Add redirect'|t('not-found-redirects') }}"
+                                ></a>
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="zilch small">{{ 'No 404s recorded yet.'|t('not-found-redirects') }}</p>
+{% endif %}

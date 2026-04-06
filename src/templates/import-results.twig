@@ -1,0 +1,31 @@
+{% set result = importForm.result %}
+
+<dl class="newism-dl">
+    <dt>{{ 'Total'|t('not-found-redirects') }}</dt>
+    <dd>{{ result.results|length }}</dd>
+    <dt>{{ 'Imported'|t('not-found-redirects') }}</dt>
+    <dd>{{ result.imported|length }}</dd>
+    <dt>{{ 'Skipped'|t('not-found-redirects') }}</dt>
+    <dd>{{ result.skipped|length }}</dd>
+    <dt>{{ 'Errors'|t('app') }}</dt>
+    <dd>{{ result.errors|length }}</dd>
+</dl>
+
+{% if result.errors %}
+    <table class="data fullwidth">
+        <thead>
+        <tr>
+            <th>{{ 'Row'|t('not-found-redirects') }}</th>
+            <th>{{ 'Error'|t('app') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for index, model in result.errors %}
+            <tr>
+                <td>{{ index + 2 }}</td>
+                <td>{{ model.getErrorSummary(true)|join(', ') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

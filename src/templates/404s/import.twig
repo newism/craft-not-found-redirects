@@ -1,0 +1,125 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'Source'|t('not-found-redirects'),
+    instructions: 'Select the source format of the CSV file.'|t('not-found-redirects'),
+    id: 'inputSource',
+    name: 'inputSource',
+    first: true,
+    value: importForm.inputSource,
+    options: [
+        { label: '404 Redirects'|t('not-found-redirects'), value: 'native' },
+        { label: 'Retour', value: 'retour' },
+    ],
+    toggle: true,
+    targetPrefix: 'source-',
+}) }}
+
+{{ forms.fileField({
+    label: 'File'|t('not-found-redirects'),
+    instructions: 'Select a .csv or .json file to import.'|t('not-found-redirects'),
+    id: 'file',
+    name: 'file',
+    accept: '.csv,.json',
+    required: true,
+    errors: importForm.getErrors('file'),
+    data: {'error-key': 'file'},
+}) }}
+
+<div id="source-native"{{ importForm.inputSource != 'native' ? ' class="hidden"' }}>
+    <p>{{ 'CSV or JSON file with the following columns:'|t('not-found-redirects') }}</p>
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Column</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">URI</th>
+            <td>Yes</td>
+            <td>The 404 URI path</td>
+        </tr>
+        <tr>
+            <th scope="row">Full URL</th>
+            <td>No</td>
+            <td>Complete URL (auto-generated if missing)</td>
+        </tr>
+        <tr>
+            <th scope="row">Site ID</th>
+            <td>No</td>
+            <td>Site ID (default: primary site)</td>
+        </tr>
+        <tr>
+            <th scope="row">Hits</th>
+            <td>No</td>
+            <td>Number of hits (default: 1)</td>
+        </tr>
+        <tr>
+            <th scope="row">First Seen</th>
+            <td>No</td>
+            <td>Date first recorded</td>
+        </tr>
+        <tr>
+            <th scope="row">Last Seen</th>
+            <td>No</td>
+            <td>Last hit date/time</td>
+        </tr>
+        <tr>
+            <th scope="row">Handled</th>
+            <td>No</td>
+            <td>TRUE / FALSE (default: FALSE)</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="source-retour"{{ importForm.inputSource != 'retour' ? ' class="hidden"' }}>
+    <p>{{ 'CSV exported from {link}Retour{linkEnd} with these columns:'|t('not-found-redirects', {
+        link: '<a href="https://github.com/nystudio107/craft-retour" target="_blank">',
+        linkEnd: '</a>',
+    })|raw }}</p>
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Column</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">404 File Not Found URL</th>
+            <td>Yes</td>
+            <td>The 404 URI</td>
+        </tr>
+        <tr>
+            <th scope="row">Last Referrer URL</th>
+            <td>No</td>
+            <td>Referring URL (imported as referrer)</td>
+        </tr>
+        <tr>
+            <th scope="row">Hits</th>
+            <td>No</td>
+            <td>Number of hits (default: 1)</td>
+        </tr>
+        <tr>
+            <th scope="row">Last Hit</th>
+            <td>No</td>
+            <td>Last hit date/time</td>
+        </tr>
+        <tr>
+            <th scope="row">Handled</th>
+            <td>No</td>
+            <td>1 or 0 (default: 0)</td>
+        </tr>
+        <tr>
+            <th scope="row">Site ID</th>
+            <td>No</td>
+            <td>Site ID (default: primary site)</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

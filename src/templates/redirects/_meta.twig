@@ -1,0 +1,82 @@
+{% if redirect.id %}
+    <dl class="meta read-only">
+        <div class="data">
+            <dt class="heading">{{ 'ID'|t('app') }}</dt>
+            <dd class="value">{{ redirect.id }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">{{ 'Status'|t('app') }}</dt>
+            <dd class="value">
+                <span class="status {{ redirect.status }}"></span>
+                {{ redirect.status|capitalize }}
+            </dd>
+        </div>
+        <div class="data">
+            <dt class="heading">{{ 'Hits'|t('not-found-redirects') }}</dt>
+            <dd class="value">{{ redirect.hitCount }}</dd>
+        </div>
+        {% if redirect.hitLastTime %}
+            <div class="data">
+                <dt class="heading">{{ 'Last Hit'|t('not-found-redirects') }}</dt>
+                <dd class="value">{{ redirect.hitLastTime|datetime }}</dd>
+            </div>
+        {% endif %}
+        <div class="data">
+            <dt class="heading">{{ 'Created at'|t('not-found-redirects') }}</dt>
+            <dd class="value">{{ redirect.dateCreated|datetime }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">{{ 'Created by'|t('not-found-redirects') }}</dt>
+            <dd class="value">
+                {% if redirect.createdBy %}
+                    {{ elementChip(redirect.createdBy, {size: 'small'}) }}
+                {% elseif redirect.createdById %}
+                    {{ 'User #{id} (deleted)'|t('not-found-redirects', { id: redirect.createdById }) }}
+                {% elseif redirect.systemGenerated %}
+                    {{ 'System Generated'|t('not-found-redirects') }}
+                {% else %}
+                    &mdash;
+                {% endif %}
+            </dd>
+        </div>
+        {% if redirect.dateUpdated %}
+            <div class="data">
+                <dt class="heading">{{ 'Updated at'|t('not-found-redirects') }}</dt>
+                <dd class="value">{{ redirect.dateUpdated|datetime }}</dd>
+            </div>
+        {% endif %}
+        {% if redirect.toType == 'entry' %}
+            <div class="data">
+                <dt class="heading">{{ 'Destination Entry'|t('not-found-redirects') }}</dt>
+                <dd class="value">
+                    {% if redirect.toElement %}
+                        {{ elementChip(redirect.toElement, {size: 'small'}) }}
+                    {% elseif redirect.toElementId %}
+                        {{ 'Entry #{id} (deleted)'|t('not-found-redirects', { id: redirect.toElementId }) }}
+                    {% else %}
+                        <span class="warning">{{ 'Entry deleted — using cached URI'|t('not-found-redirects') }}</span>
+                    {% endif %}
+                </dd>
+            </div>
+        {% endif %}
+        {% if redirect.systemGenerated and redirect.elementId %}
+            <div class="data">
+                <dt class="heading">{{ 'Source Element'|t('not-found-redirects') }}</dt>
+                <dd class="value">
+                    {% if redirect.element %}
+                        {{ elementChip(redirect.element, {size: 'small'}) }}
+                    {% else %}
+                        {{ 'Element #{id} (deleted)'|t('not-found-redirects', { id: redirect.elementId }) }}
+                    {% endif %}
+                </dd>
+            </div>
+        {% endif %}
+    </dl>
+    <hr>
+{% endif %}
+
+<div style="margin-block-start: var(--padding);">
+    <h4>{{ 'Pattern Matching'|t('not-found-redirects') }}</h4>
+    <p>{{ 'Incoming URI and Destination URI support Craft CMS pattern matching.'|t('not-found-redirects') }}</p>
+    <button type="button" data-pattern-reference-btn class="btn">{{ 'View Pattern Reference'|t('not-found-redirects') }}</button>
+</div>

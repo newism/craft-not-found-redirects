@@ -1,0 +1,209 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ hiddenInput('redirectId', redirect.id) }}
+
+<div>
+
+    {% if sites|length > 1 %}
+        {{ forms.selectField({
+            label: 'Site'|t('app'),
+            instructions: 'Restrict this redirect to a specific site, or apply to all sites.'|t('not-found-redirects'),
+            id: 'siteId',
+            name: 'siteId',
+            value: redirect.siteId,
+            first: true,
+            options: [{ label: 'All Sites'|t('app'), value: '' }]|merge(
+                sites|map(s => { label: s.name, value: s.id })
+            ),
+        }) }}
+    {% endif %}
+
+    {{ forms.selectField({
+        label: 'Status Code'|t('not-found-redirects'),
+        id: 'statusCode',
+        name: 'statusCode',
+        value: redirect.statusCode,
+        first: sites|length == 1,
+        options: [
+            { label: '301 — Permanent Redirect'|t('not-found-redirects'), value: 301 },
+            { label: '302 — Temporary Redirect'|t('not-found-redirects'), value: 302 },
+            { label: '307 — Temporary Redirect (Preserve Method)'|t('not-found-redirects'), value: 307 },
+            { label: '404 — Block (Simple 404 Response)'|t('not-found-redirects'), value: 404 },
+            { label: '410 — Gone (No Redirect)'|t('not-found-redirects'), value: 410 },
+        ],
+        errors: redirect.getErrors('statusCode'),
+        data: { field: 'statusCode' },
+    }) }}
+
+    {% set fromInput %}
+        {{ forms.text({
+            id: 'from',
+            name: 'from',
+            value: redirect.from,
+            class: 'fullwidth',
+        }) }}
+    {% endset %}
+    {{ forms.field({
+        label: 'Incoming URI'|t('not-found-redirects'),
+        instructions: 'The path relative to the site root (without the site prefix). For example, enter <code>old-blog</code> not <code>en/old-blog</code>.'|t('not-found-redirects'),
+        id: 'from',
+        required: true,
+        errors: redirect.getErrors('from'),
+    }, fromInput) }}
+
+    {# ── Destination (hidden when 410) ──────────────────────────────── #}
+
+    <div data-destination-fields class="{{ redirect.statusCode in [404, 410] ? 'hidden' }}">
+        {% set destinationInput %}
+            <div class="flex">
+                {{ forms.select({
+                    id: 'toType',
+                    name: 'toType',
+                    value: redirect.toType ?? 'url',
+                    options: [
+                        { label: 'URL'|t('not-found-redirects'), value: 'url' },
+                        { label: 'Entry'|t('not-found-redirects'), value: 'entry' },
+                    ],
+                    toggle: true,
+                    targetPrefix: 'toType-',
+                    data: { field: 'toType' },
+                }) }}
+                <div id="toType-url" class="flex-grow {{ (redirect.toType ?? 'url') != 'url' ? 'hidden' }}">
+                    {{ forms.text({
+                        id: 'to',
+                        name: 'to',
+                        value: redirect.to,
+                        class: 'fullwidth',
+                    }) }}
+                </div>
+                <div id="toType-entry" class="flex-grow {{ (redirect.toType ?? 'url') != 'entry' ? 'hidden' }}">
+                    {% include '_includes/forms/elementSelect.twig' with {
+                        elementType: 'craft\\elements\\Entry',
+                        id: 'toElementId',
+                        name: 'toElementId',
+                        elements: redirect.toElement ? [redirect.toElement] : [],
+                        single: true,
+                        sources: '*',
+                    } only %}
+                </div>
+            </div>
+        {% endset %}
+        {{ forms.field({
+            label: 'Redirect Destination'|t('not-found-redirects'),
+            id: 'to',
+            errors: redirect.getErrors('to')|merge(redirect.getErrors('toElementId')),
+        }, destinationInput) }}
+    </div>{# /destination-fields #}
+
+</div>{# /flex-fields #}
+
+<div class="field">
+    <button type="button" class="fieldtoggle" data-target="advanced">{{ "Advanced"|t('app') }}</button>
+</div>
+
+<div id="advanced" class="hidden flex-fields">
+
+    <div data-resolved-entry-uri class="{{ (redirect.toType ?? 'url') != 'entry' ? 'hidden' }}">
+        {{ forms.textField({
+            label: 'Resolved Entry URI'|t('not-found-redirects'),
+            id: 'toElementUrl',
+            value: redirect.toElement ? (redirect.toElement.uri == '__home__' ? '/' : redirect.toElement.uri ?: '/') : '',
+            readonly: true,
+            class: 'code',
+            data: { field: 'toElementUrl' },
+        }) }}
+    </div>
+
+    {{ forms.lightswitchField({
+        label: 'Enabled'|t('app'),
+        id: 'enabled',
+        name: 'enabled',
+        on: redirect.enabled,
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Raw Regex Match'|t('not-found-redirects'),
+        instructions: 'Uses raw regular expressions instead of Craft\'s &lt;param&gt; pattern syntax. Destination uses $1, $2 backreferences.'|t('not-found-redirects'),
+        id: 'regexMatch',
+        name: 'regexMatch',
+        on: redirect.regexMatch,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Priority'|t('not-found-redirects'),
+        instructions: 'Higher priority rules are checked first. Default: 0.'|t('not-found-redirects'),
+        id: 'priority',
+        name: 'priority',
+        type: 'number',
+        value: redirect.priority,
+        size: 5,
+        errors: redirect.getErrors('priority'),
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'Start Date'|t('not-found-redirects'),
+        instructions: 'The redirect becomes active at this date/time.'|t('not-found-redirects'),
+        id: 'startDate',
+        name: 'startDate',
+        value: redirect.startDate,
+        errors: redirect.getErrors('startDate'),
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'End Date'|t('not-found-redirects'),
+        instructions: 'The redirect stops being active after this date/time.'|t('not-found-redirects'),
+        id: 'endDate',
+        name: 'endDate',
+        value: redirect.endDate,
+        errors: redirect.getErrors('endDate'),
+    }) }}
+
+
+</div>
+
+{# ── Test URLs ──────────────────────────────────────────────────── #}
+
+<hr>
+<div class="flex-fields">
+    {% set testInput %}
+        {{ forms.textarea({
+            id: 'testUris',
+            class: 'nicetext',
+            rows: 1,
+            inputAttributes: {
+                data: {
+                    'test-uris': true
+                },
+            }
+        }) }}
+    {% endset %}
+    {{ forms.field({
+        label: 'Test URLs'|t('not-found-redirects'),
+        instructions: 'Enter one or more paths (one per line) to test against the pattern above.'|t('not-found-redirects'),
+    }, testInput) }}
+    <div data-test-results class="hidden" style="margin-block-start: var(--s);"></div>
+</div>
+
+{# ── Notes ──────────────────────────────────────────────────────── #}
+
+<hr>
+
+{% if redirect.id %}
+    <h4>{{ 'Notes'|t('not-found-redirects') }}</h4>
+{% endif %}
+
+{% if redirect.id %}
+    <div data-notes-list data-redirect-id="{{ redirect.id }}">
+        {% include 'not-found-redirects/notes/_list' with { notes: notes } only %}
+    </div>
+    <div style="margin-top: 8px;">
+        <button type="button" data-add-note-btn class="btn add icon dashed">{{ 'Add Note'|t('not-found-redirects') }}</button>
+    </div>
+{% else %}
+    {{ forms.textareaField({
+        label: 'Add a note'|t('not-found-redirects'),
+        id: 'newNote',
+        name: 'newNote',
+        rows: 3,
+    }) }}
+{% endif %}

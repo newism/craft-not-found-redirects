@@ -1,0 +1,145 @@
+<div tabindex="-1" autofocus></div>
+<h1>Pattern Matching</h1>
+
+<p>
+    Incoming and Destination URIs use Craft’s routing pattern syntax, built on top of regular expressions.
+    Patterns define
+    <em>named capture groups</em> using angle brackets, which let you extract parts of the URL and reuse them in the destination.
+</p>
+
+<ol>
+    <li>Define tokens in the <strong>Incoming URI</strong> to capture segments from the request</li>
+    <li>Reuse captured values in the <strong>Destination URI</strong> via <code>&lt;name&gt;</code></li>
+    <li>Matching is case-insensitive</li>
+</ol>
+
+<h2>Syntax</h2>
+
+<p>
+    There are two ways to define tokens. The first uses Craft’s default matching behaviour (no regex required). The second allows you to provide a custom regular expression for more control.
+</p>
+
+<div style="overflow-x: auto;">
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Token</th>
+            <th>Description</th>
+            <th>Notes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code>&lt;name&gt;</code></td>
+            <td>Captures a single URL segment using Craft’s default rule.</td>
+            <td>
+                You do <strong>not</strong> need to write any regex. Internally, this behaves like
+                <code>[^\/]+</code> (anything up to the next slash).
+            </td>
+        </tr>
+        <tr>
+            <td><code>&lt;name:pattern&gt;</code></td>
+            <td>Captures using a custom regular expression.</td>
+            <td> Use this when you need to restrict what can match (e.g. numbers only, specific formats).</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<h2>Common Patterns</h2>
+<div style="overflow-x: auto;">
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Pattern</th>
+            <th>Matches</th>
+            <th>Example</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code>&lt;slug&gt;</code></td>
+            <td>Any single segment (<code>[^\/]+</code>)</td>
+            <td><code>my-page</code></td>
+        </tr>
+        <tr>
+            <td><code>&lt;id:\d+&gt;</code></td>
+            <td>Digits only</td>
+            <td><code>123</code></td>
+        </tr>
+        <tr>
+            <td><code>&lt;year:\d{4}&gt;</code></td>
+            <td>4-digit year</td>
+            <td><code>2026</code></td>
+        </tr>
+        <tr>
+            <td><code>&lt;path:.*&gt;</code></td>
+            <td>Any path (multiple segments, including slashes)</td>
+            <td><code>a/b/c</code></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<h2>Examples</h2>
+<div style="overflow-x: auto;">
+    <table class="data fullwidth editable">
+        <thead>
+        <tr>
+            <th>Incoming URI</th>
+            <th>Destination URI</th>
+            <th>Notes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code>old-page</code></td>
+            <td><code>new-page</code></td>
+            <td>Static redirect</td>
+        </tr>
+        <tr>
+            <td><code>blog/&lt;slug&gt;</code></td>
+            <td><code>news/&lt;slug&gt;</code></td>
+            <td>Preserves slug</td>
+        </tr>
+        <tr>
+            <td><code>products/&lt;id:\d+&gt;</code></td>
+            <td><code>shop/&lt;id&gt;</code></td>
+            <td>Validates numeric ID</td>
+        </tr>
+        <tr>
+            <td><code>old/&lt;path:.*&gt;</code></td>
+            <td><code>new/&lt;path&gt;</code></td>
+            <td>Wildcard / catch-all</td>
+        </tr>
+        <tr>
+            <td><code>blog/&lt;year:\d{4}&gt;/&lt;month:\d{2}&gt;/&lt;slug&gt;</code></td>
+            <td><code>news/&lt;year&gt;/&lt;month&gt;/&lt;slug&gt;</code></td>
+            <td>Structured date routing</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<h2>Tips</h2>
+
+<ol>
+    <li>
+        In most cases you don't need a regular expression. A simple named token is all you need eg:
+        <code>&lt;slug&gt;</code>.
+    </li>
+    <li>
+        Use <code>&lt;path:.*&gt;</code> carefully. It will match everything and can override more specific routes.
+    </li>
+    <li>
+        Custom patterns use standard regex. You can test them at
+        <a href="https://regex101.com/" target="_blank" rel="noopener">regex101.com</a>.
+    </li>
+    <li>
+        Craft wraps your pattern internally, so you usually don’t need <code>^</code> or <code>$</code>.
+    </li>
+</ol>
+
+<p>
+    <a href="https://craftcms.com/docs/5.x/system/routing.html#advanced-routing-with-url-rules" target="_blank"
+       rel="noopener">
+        Craft CMS Routing Docs →
+    </a>
+</p>

@@ -1,0 +1,45 @@
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') %}
+
+{% css %}
+    .nfr-shrink { white-space: nowrap; width: 1%; }
+    .nfr-truncate { max-width: 0; }
+    .nfr-truncate a,
+    .nfr-truncate span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+{% endcss %}
+
+<div id="notfound-vue-admin-table"></div>
+
+{% js %}
+    (() => {
+    const columns = [
+    { name: '__slot:title', title: Craft.t('not-found-redirects', 'URI'), sortField: 'uri', dataClass: 'nfr-truncate' },
+    { name: 'handled', title: Craft.t('not-found-redirects', 'Handled'), titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'hitCount', title: Craft.t('not-found-redirects', 'Hits'), sortField: true, titleClass: 'nfr-shrink rightalign', dataClass: 'nfr-shrink rightalign' },
+    { name: 'firstSeen', title: Craft.t('not-found-redirects', 'First Seen'), sortField: 'dateCreated', titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'lastSeen', title: Craft.t('not-found-redirects', 'Last Seen'), sortField: 'hitLastTime', titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'referrers', title: Craft.t('not-found-redirects', 'Referrers'), sortField: true, titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'redirect', title: Craft.t('not-found-redirects', 'Redirect'), titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    ];
+
+    const config = {
+        columns,
+        container: '#notfound-vue-admin-table',
+        emptyMessage: Craft.t('not-found-redirects', 'No 404s recorded yet.'),
+        tableDataEndpoint: Craft.getActionUrl('not-found-redirects/not-found-uris/table-data', {
+        handled: '{{ handled is null ? "all" : (handled ? "1" : "0") }}',
+        siteId: '{{ siteId }}',
+        }),
+        search: true,
+        searchPlaceholder: Craft.t('not-found-redirects', 'Search URIs…'),
+        perPage: 50,
+        fullPane: true,
+    };
+
+    {% if canDelete404s %}
+        config.deleteAction = 'not-found-redirects/not-found-uris/delete';
+        config.deleteConfirmationMessage = Craft.t('not-found-redirects', 'Are you sure you want to delete this 404 record?');
+    {% endif %}
+
+    new Craft.VueAdminTable(config);
+    })();
+{% endjs %}

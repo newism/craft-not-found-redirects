@@ -1,0 +1,51 @@
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') %}
+
+{% set multiSite = craft.app.sites.allSites|length > 1 %}
+{% set showSiteColumn = multiSite and siteId is null %}
+
+{% css %}
+    .nfr-shrink { white-space: nowrap; width: 1%; }
+    .nfr-truncate { max-width: 0; }
+    .nfr-truncate a,
+    .nfr-truncate span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+{% endcss %}
+
+<div id="redirects-vue-admin-table"></div>
+
+{% js %}
+    (() => {
+    const columns = [
+    { name: '__slot:title', title: Craft.t('not-found-redirects', 'From'), sortField: true, dataClass: 'nfr-truncate' },
+    { name: 'to', title: Craft.t('not-found-redirects', 'To'), sortField: true },
+    {% if showSiteColumn %}
+        { name: 'siteName', title: Craft.t('app', 'Site'), titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    {% endif %}
+    { name: 'statusCode', title: Craft.t('not-found-redirects', 'Status Code'), sortField: true, titleClass: 'nfr-shrink centeralign', dataClass: 'nfr-shrink centeralign' },
+    { name: 'enabled', title: Craft.t('app', 'Enabled'), titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'redirectStatus', title: Craft.t('app', 'Status'), titleClass: 'nfr-shrink', dataClass: 'nfr-shrink' },
+    { name: 'hitCount', title: Craft.t('not-found-redirects', 'Hits'), sortField: true, titleClass: 'nfr-shrink rightalign', dataClass: 'nfr-shrink rightalign' },
+    { name: 'priority', title: Craft.t('not-found-redirects', 'Priority'), sortField: true, titleClass: 'nfr-shrink rightalign', dataClass: 'nfr-shrink rightalign' },
+    ];
+
+    const config = {
+    columns,
+    container: '#redirects-vue-admin-table',
+    emptyMessage: Craft.t('not-found-redirects', 'No redirect rules yet.'),
+    tableDataEndpoint: Craft.getActionUrl('not-found-redirects/redirects/table-data', {
+    systemGenerated: '{{ systemGenerated ?? "" }}',
+    siteId: '{{ siteId ?? "" }}',
+    }),
+    search: true,
+    searchPlaceholder: Craft.t('not-found-redirects', 'Search redirects…'),
+    perPage: 50,
+    fullPane: true,
+    };
+
+    {% if canDeleteRedirects %}
+        config.deleteAction = 'not-found-redirects/redirects/delete';
+        config.deleteConfirmationMessage = Craft.t('not-found-redirects', 'Are you sure you want to delete this redirect?');
+    {% endif %}
+
+    new Craft.VueAdminTable(config);
+    })();
+{% endjs %}

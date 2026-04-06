@@ -1,0 +1,33 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'View'|t('not-found-redirects'),
+    id: 'view',
+    name: 'view',
+    value: widget.view,
+    options: [
+        { label: 'Latest 404s'|t('not-found-redirects'), value: 'latest' },
+        { label: 'Top 404s (by hits)'|t('not-found-redirects'), value: 'top' },
+    ],
+}) }}
+
+{{ forms.selectField({
+    label: 'Status'|t('app'),
+    id: 'handled',
+    name: 'handled',
+    value: widget.handled,
+    options: [
+        { label: 'Unhandled'|t('not-found-redirects'), value: 'unhandled' },
+        { label: 'Handled'|t('not-found-redirects'), value: 'handled' },
+        { label: 'All'|t('app'), value: 'all' },
+    ],
+}) }}
+
+{{ forms.textField({
+    label: 'Limit'|t('app'),
+    id: 'limit',
+    name: 'limit',
+    value: widget.limit,
+    type: 'number',
+    size: 3,
+}) }}

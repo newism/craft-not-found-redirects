@@ -1,0 +1,17 @@
+*.DS_Store
+*.idea/*
+*.log
+*Thumbs.db
+.env
+/node_modules
+/vendor
+composer.lock
+/.claude/settings.local.json
+docs/node_modules
+docs/.vitepress/cache
+docs/.vitepress/dist
+
+# Claude plans
+docs/plans/
+/.claude/
+docs/.wrangler

@@ -1,0 +1,55 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'Format'|t('not-found-redirects'),
+    instructions: 'Select the export file format.'|t('not-found-redirects'),
+    id: 'format',
+    name: 'format',
+    first: true,
+    value: 'csv',
+    options: [
+        { label: 'CSV', value: 'csv' },
+        { label: 'JSON', value: 'json' },
+    ],
+}) }}
+
+<p>{{ 'Export all 404 records.'|t('not-found-redirects') }}</p>
+
+<table class="data fullwidth">
+    <thead>
+    <tr>
+        <th>Column</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th scope="row">URI</th>
+        <td>The 404 URI path</td>
+    </tr>
+    <tr>
+        <th scope="row">Full URL</th>
+        <td>Complete URL including domain</td>
+    </tr>
+    <tr>
+        <th scope="row">Site ID</th>
+        <td>Site ID</td>
+    </tr>
+    <tr>
+        <th scope="row">Hits</th>
+        <td>Number of times this 404 was hit</td>
+    </tr>
+    <tr>
+        <th scope="row">First Seen</th>
+        <td>Date first recorded</td>
+    </tr>
+    <tr>
+        <th scope="row">Last Seen</th>
+        <td>Last hit date/time</td>
+    </tr>
+    <tr>
+        <th scope="row">Handled</th>
+        <td>TRUE / FALSE (CSV) or true / false (JSON)</td>
+    </tr>
+    </tbody>
+</table>

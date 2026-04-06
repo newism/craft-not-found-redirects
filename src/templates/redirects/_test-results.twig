@@ -1,0 +1,29 @@
+<h4>{{ 'Test Results'|t('not-found-redirects') }}</h4>
+{% if results is empty %}
+    <p class="zilch small">{{ 'No results.'|t('not-found-redirects') }}</p>
+{% else %}
+    <table class="data fullwidth">
+        <thead>
+        <tr>
+            <th style="white-space: nowrap; width: 1%;">{{ 'Match'|t('not-found-redirects') }}</th>
+            <th>{{ 'URL'|t('not-found-redirects') }}</th>
+            <th>{{ 'Destination'|t('not-found-redirects') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for result in results %}
+            <tr>
+                <td>{{ result.matchedHtml|raw }}</td>
+                <td>{{ result.uri }}</td>
+                <td>
+                    {% if result.destination %}
+                        {{ result.destination }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

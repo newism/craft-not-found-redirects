@@ -1,0 +1,26 @@
+<div id="{{ id }}"
+     class="meta"
+     data-incoming-redirects
+     data-entry-id="{{ entryId }}"
+     style="padding: var(--m);"
+>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-block-end: var(--s);">
+        <h4 class="heading" style="margin: 0;">{{ '404 Redirects'|t('not-found-redirects') }}</h4>
+    </div>
+    <p class="light">{{ 'These 404 redirects point to this entry'|t('not-found-redirects') }}</p>
+    {% if redirects is not empty %}
+        <ul class="elements chips chips-small">
+            {% for redirect in redirects %}
+                <li>
+                    {{ redirect.chipHtml|raw }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if canCreate %}
+        <div style="margin-block-start: var(--s)">
+            <button type="button" data-add-redirect-btn class="btn add icon dashed wrap">{{ 'Add Redirect'|t('not-found-redirects') }}</button>
+        </div>
+    {% endif %}
+
+</div>

@@ -1,0 +1,79 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.selectField({
+    label: 'Format'|t('not-found-redirects'),
+    instructions: 'Select the export file format.'|t('not-found-redirects'),
+    id: 'format',
+    name: 'format',
+    first: true,
+    value: 'csv',
+    options: [
+        { label: 'CSV', value: 'csv' },
+        { label: 'JSON', value: 'json' },
+    ],
+}) }}
+
+<p>{{ 'Export all redirect rules.'|t('not-found-redirects') }}</p>
+
+<table class="data fullwidth">
+    <thead>
+    <tr>
+        <th>Column</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th scope="row">From</th>
+        <td>Incoming URI pattern</td>
+    </tr>
+    <tr>
+        <th scope="row">To</th>
+        <td>Destination URI or URL</td>
+    </tr>
+    <tr>
+        <th scope="row">To Type</th>
+        <td><code>url</code> or <code>entry</code></td>
+    </tr>
+    <tr>
+        <th scope="row">To Element ID</th>
+        <td>Entry ID for entry-type redirects</td>
+    </tr>
+    <tr>
+        <th scope="row">Status Code</th>
+        <td>301, 302, 307, or 410</td>
+    </tr>
+    <tr>
+        <th scope="row">Priority</th>
+        <td>Sort priority</td>
+    </tr>
+    <tr>
+        <th scope="row">Enabled</th>
+        <td>TRUE / FALSE (CSV) or true / false (JSON)</td>
+    </tr>
+    <tr>
+        <th scope="row">System Generated</th>
+        <td>TRUE / FALSE (CSV) or true / false (JSON)</td>
+    </tr>
+    <tr>
+        <th scope="row">Start Date</th>
+        <td>Active from date/time</td>
+    </tr>
+    <tr>
+        <th scope="row">End Date</th>
+        <td>Active until date/time</td>
+    </tr>
+    <tr>
+        <th scope="row">Hits</th>
+        <td>Number of hits</td>
+    </tr>
+    <tr>
+        <th scope="row">Last Hit</th>
+        <td>Last hit date/time</td>
+    </tr>
+    <tr>
+        <th scope="row">Notes</th>
+        <td>JSON array: <code>[{"note":"...","author":"...","date":"..."}]</code></td>
+    </tr>
+    </tbody>
+</table>

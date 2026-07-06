@@ -19,6 +19,7 @@ flowchart TD
     I -->|301 / 302 / 307| J[Redirect + end]
     I -->|404| J2[Fast 404 text response]
     I -->|410| K[410 Gone response]
+    I -->|444| K2[444 No Response (nginx)]
     J --> L2[EVENT_AFTER_REDIRECT]
     F -->|No| L[Log as unhandled]
     L --> M[Craft renders 404 page]
@@ -29,6 +30,7 @@ flowchart TD
     style J fill: #efe, stroke: #3c3
     style J2 fill: #fee, stroke: #c33
     style K fill: #fee, stroke: #c33
+    style K2 fill: #fee, stroke: #c33
     style M fill: #fee, stroke: #c33
 ```
 
@@ -43,7 +45,7 @@ Every 404 flows through this pipeline. [Events](events.md) on `NotFoundUriServic
 5. If a match is found:
    - The 404 is logged as "handled"
    - `EVENT_BEFORE_REDIRECT` fires. Modify the destination URL or cancel the redirect.
-   - The visitor is redirected (301/302/307), shown a 410 Gone page, or given a fast 404 text response.
+   - The visitor is redirected (301/302/307), shown a 410 Gone page, given a fast 404 text response, or returned as 444 No Response for nginx setups.
    - `EVENT_AFTER_REDIRECT` fires. Post-redirect hook for analytics or logging.
 6. If no match is found, the 404 is logged as "unhandled" and the error page renders normally.
 7. The referrer (if present) is recorded for audit.

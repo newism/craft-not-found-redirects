@@ -78,12 +78,12 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
     {
         return [
             [['from'], 'required'],
-            [['to'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410]) && $this->toType !== 'entry'],
-            [['toElementId'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410]) && $this->toType === 'entry'],
+            [['to'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType !== 'entry'],
+            [['toElementId'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType === 'entry'],
             [['toType'], 'in', 'range' => ['url', 'entry']],
             [['siteId', 'statusCode', 'priority', 'hitCount', 'toElementId'], 'integer'],
             [['enabled', 'regexMatch', 'systemGenerated'], 'boolean'],
-            [['statusCode'], 'in', 'range' => [301, 302, 307, 404, 410]],
+            [['statusCode'], 'in', 'range' => [301, 302, 307, 404, 410, 444]],
             [['from', 'to'], 'string', 'max' => 500],
             [['startDate', 'endDate'], 'safe'],
         ];

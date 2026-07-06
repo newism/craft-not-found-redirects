@@ -30,6 +30,7 @@
             { label: '307 — Temporary Redirect (Preserve Method)'|t('not-found-redirects'), value: 307 },
             { label: '404 — Block (Simple 404 Response)'|t('not-found-redirects'), value: 404 },
             { label: '410 — Gone (No Redirect)'|t('not-found-redirects'), value: 410 },
+            { label: '444 — No Response (nginx)'|t('not-found-redirects'), value: 444 },
         ],
         errors: redirect.getErrors('statusCode'),
         data: { field: 'statusCode' },
@@ -53,7 +54,7 @@
 
     {# ── Destination (hidden when 410) ──────────────────────────────── #}
 
-    <div data-destination-fields class="{{ redirect.statusCode in [404, 410] ? 'hidden' }}">
+    <div data-destination-fields class="{{ redirect.statusCode in [404, 410, 444] ? 'hidden' }}">
         {% set destinationInput %}
             <div class="flex">
                 {{ forms.select({

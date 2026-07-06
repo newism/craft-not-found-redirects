@@ -201,6 +201,17 @@ class NotFoundUriService extends Component
             return;
         }
 
+        // 444 No Response — nginx-specific close connection behavior
+        if ($redirect->statusCode === 444) {
+            $response = Craft::$app->getResponse();
+            $response->setStatusCode(444);
+            $response->format = Response::FORMAT_RAW;
+            $response->data = '';
+            Craft::info("444 No Response: {$redirect->from}", NotFoundRedirects::LOG);
+            Craft::$app->end();
+            return; // @phpstan-ignore deadCode.unreachable
+        }
+
         // Resolve relative paths to full site URLs (multi-site subfolder prefixes)
         if (!preg_match('#^(https?:)?//#i', $destinationUrl)) {
             $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $redirect->siteId ?? $siteId);

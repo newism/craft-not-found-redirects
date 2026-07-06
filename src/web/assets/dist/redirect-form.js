@@ -23,14 +23,14 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
         this._initElementChipEdit();
     },
 
-    // ── 410 Status Code Toggle ──────────────────────────────────────
+    // ── Block Status Code Toggle ────────────────────────────────────
     _initStatusCodeToggle: function () {
         const statusSelect = this.form.querySelector('[data-field="statusCode"] select');
         const destinationFields = this.form.querySelector('[data-destination-fields]');
 
         if (statusSelect && destinationFields) {
             statusSelect.addEventListener('change', () => {
-                destinationFields.classList.toggle('hidden', statusSelect.value === '404' || statusSelect.value === '410');
+                destinationFields.classList.toggle('hidden', statusSelect.value === '404' || statusSelect.value === '410' || statusSelect.value === '444');
             });
         }
     },

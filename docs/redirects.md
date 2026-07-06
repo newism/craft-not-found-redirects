@@ -43,9 +43,9 @@ The create and edit forms are the same. Fields are pre-populated depending on ho
 ### Fields
 
 - **Site**: only shown in multi-site installs. Restrict the redirect to a specific site, or leave blank to apply across all sites.
-- **Status Code**: 301 (permanent), 302 (temporary, default), 307 (temporary, preserves HTTP method), 404 Block (returns a plain text "404 Not Found" response for bot traffic and missing files), or 410 (gone, permanently removed).
+- **Status Code**: 301 (permanent), 302 (temporary, default), 307 (temporary, preserves HTTP method), 404 Block (returns a plain text "404 Not Found" response for bot traffic and missing files), 410 (gone, permanently removed), or 444 No Response (nginx only; closes connection without sending a response body).
 - **Incoming URI**: the URI pattern to match. Supports exact match, Craft-style named parameters (`blog/<slug>`), and pure regex. See [Pattern Matching](pattern-matching.md).
-- **Destination**: hidden for 404 and 410 status codes. Choose **URL** (relative path or full external URL) or **Entry** (select a Craft entry, URL resolves dynamically, falls back to cached URI if deleted).
+- **Destination**: hidden for 404, 410, and 444 status codes. Choose **URL** (relative path or full external URL) or **Entry** (select a Craft entry, URL resolves dynamically, falls back to cached URI if deleted).
 
 ### Advanced Fields
 

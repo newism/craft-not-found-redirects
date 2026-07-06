@@ -123,7 +123,7 @@
 
     {{ forms.lightswitchField({
         label: 'Raw Regex Match'|t('not-found-redirects'),
-        instructions: 'Uses raw regular expressions instead of Craft\'s &lt;param&gt; pattern syntax. Destination uses $1, $2 backreferences.'|t('not-found-redirects'),
+        instructions: 'Uses raw regular expressions instead of Craft\'s &lt;param&gt; pattern syntax. Backticks are used as the regex delimiter. Add ^ and $ yourself if needed. Destination uses $1, $2 backreferences.'|t('not-found-redirects'),
         id: 'regexMatch',
         name: 'regexMatch',
         on: redirect.regexMatch,

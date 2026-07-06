@@ -1,5 +1,11 @@
 # Release Notes for 404 Redirects
 
+## Unreleased
+
+### Changed
+
+- Raw regex redirect patterns are now evaluated exactly as written (no implicit `^`/`$` anchors).
+
 ## 1.0.0 - 2026-04-09
 
 ### Added

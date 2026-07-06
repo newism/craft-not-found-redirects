@@ -5,6 +5,9 @@
 ### Added
 
 - Added a sortable `Date Created` column to the redirects index table.
+
+### Changed
+
 - Changed default redirects index sorting to `dateCreated DESC` (newest first).
 
 ## 1.0.0 - 2026-04-09

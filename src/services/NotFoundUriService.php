@@ -209,7 +209,6 @@ class NotFoundUriService extends Component
             $response->data = '';
             Craft::info("444 No Response: {$redirect->from}", NotFoundRedirects::LOG);
             Craft::$app->end();
-            return; // @phpstan-ignore deadCode.unreachable
         }
 
         // Resolve relative paths to full site URLs (multi-site subfolder prefixes)

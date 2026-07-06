@@ -1,5 +1,11 @@
 # Release Notes for 404 Redirects
 
+## Unreleased
+
+### Added
+
+- Added support for `444 — No Response (nginx)` redirect rules without a destination URL.
+
 ## 1.0.0 - 2026-04-09
 
 ### Added

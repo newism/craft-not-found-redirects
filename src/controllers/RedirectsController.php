@@ -287,7 +287,7 @@ JS, $vars);
             search: $this->request->getParam('search'),
             systemGenerated: $systemGenerated,
             siteId: $siteId,
-            sortField: $this->request->getParam('sort.0.field', 'priority'),
+            sortField: $this->request->getParam('sort.0.field', 'dateCreated'),
             sortDir: $this->request->getParam('sort.0.direction') === 'asc' ? SORT_ASC : SORT_DESC,
         ));
     }

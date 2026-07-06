@@ -452,7 +452,7 @@ class RedirectService extends Component
         ?string $search = null,
         ?bool   $systemGenerated = null,
         ?int    $siteId = null,
-        string  $sortField = 'priority',
+        string  $sortField = 'dateCreated',
         int     $sortDir = SORT_DESC
     ): array
     {
@@ -518,6 +518,7 @@ class RedirectService extends Component
             ]),
             'hitCount' => $r->hitCount,
             'hitLastTime' => $r->hitLastTime ? Craft::$app->getFormatter()->asDatetime($r->hitLastTime, 'short') : '-',
+            'dateCreated' => Craft::$app->getFormatter()->asDatetime($r->dateCreated, 'short'),
             'siteName' => $r->siteId ? ($sites->getSiteById($r->siteId)?->name ?? '') : Craft::t('app', 'All'),
         ])->all();
 
@@ -537,6 +538,7 @@ class RedirectService extends Component
             'statusCode' => 'statusCode',
             'enabled' => 'enabled',
             'hitCount' => 'hitCount',
+            'dateCreated' => 'dateCreated',
             default => 'priority',
         };
     }

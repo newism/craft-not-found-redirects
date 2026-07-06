@@ -201,7 +201,7 @@ class NotFoundUriService extends Component
             return;
         }
 
-        // 444 No Response — nginx-specific close connection behavior
+        // 444 No Response — send status/body for nginx to close the connection upstream
         if ($redirect->statusCode === 444) {
             $response = Craft::$app->getResponse();
             $response->setStatusCode(444);
@@ -209,6 +209,7 @@ class NotFoundUriService extends Component
             $response->data = '';
             Craft::info("444 No Response: {$redirect->from}", NotFoundRedirects::LOG);
             Craft::$app->end();
+            return;
         }
 
         // Resolve relative paths to full site URLs (multi-site subfolder prefixes)

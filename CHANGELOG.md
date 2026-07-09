@@ -1,6 +1,6 @@
 # Release Notes for 404 Redirects
 
-## Unreleased
+## 1.1.0 - 2026-07-09
 
 ### Added
 

@@ -107,8 +107,8 @@ class RedirectService extends Component
             }
         }
 
-        // 404 Block and 410 Gone have no destination
-        if (in_array($model->statusCode, [404, 410])) {
+        // 404 Block, 410 Gone, and 444 No Response have no destination
+        if (in_array($model->statusCode, [404, 410, 444])) {
             $model->to = '';
             $model->toElementId = null;
         }
@@ -452,7 +452,7 @@ class RedirectService extends Component
         ?string $search = null,
         ?bool   $systemGenerated = null,
         ?int    $siteId = null,
-        string  $sortField = 'priority',
+        string  $sortField = 'dateCreated',
         int     $sortDir = SORT_DESC
     ): array
     {
@@ -500,7 +500,7 @@ class RedirectService extends Component
             'title' => $r->from ?: '/',
             'url' => $r->getCpEditUrl(),
             'to' => match (true) {
-                in_array($r->statusCode, [404, 410]) => '—',
+                in_array($r->statusCode, [404, 410, 444]) => '—',
                 $r->toType === 'entry' && $r->getToElement() => Cp::elementChipHtml($r->getToElement()),
                 $r->toType === 'entry' => ($r->to && $r->to !== Element::HOMEPAGE_URI ? $r->to : '/') . ' (entry deleted)',
                 default => $r->to && $r->to !== Element::HOMEPAGE_URI ? $r->to : '/',
@@ -518,6 +518,7 @@ class RedirectService extends Component
             ]),
             'hitCount' => $r->hitCount,
             'hitLastTime' => $r->hitLastTime ? Craft::$app->getFormatter()->asDatetime($r->hitLastTime, 'short') : '-',
+            'dateCreated' => Craft::$app->getFormatter()->asDatetime($r->dateCreated, 'short'),
             'siteName' => $r->siteId ? ($sites->getSiteById($r->siteId)?->name ?? '') : Craft::t('app', 'All'),
         ])->all();
 
@@ -537,6 +538,7 @@ class RedirectService extends Component
             'statusCode' => 'statusCode',
             'enabled' => 'enabled',
             'hitCount' => 'hitCount',
+            'dateCreated' => 'dateCreated',
             default => 'priority',
         };
     }

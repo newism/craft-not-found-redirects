@@ -65,7 +65,7 @@ class RedirectInterface
             'statusCode' => [
                 'name' => 'statusCode',
                 'type' => Type::int(),
-                'description' => 'HTTP status code (301, 302, 307, 410).',
+                'description' => 'HTTP status code (301, 302, 307, 404, 410, 444).',
             ],
             'priority' => [
                 'name' => 'priority',

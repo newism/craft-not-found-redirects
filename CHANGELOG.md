@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Added support for `444 — No Response (nginx)` redirect rules without a destination URL.
+- Added a sortable `Date Created` column to the redirects index table.
+
 ### Changed
 
+- Changed default redirects index sorting to `dateCreated DESC` (newest first).
 - Raw regex redirect patterns are now evaluated exactly as written (no implicit `^`/`$` anchors).
 
 ## 1.0.0 - 2026-04-09

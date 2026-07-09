@@ -52,7 +52,7 @@ The create and edit forms are the same. Fields are pre-populated depending on ho
 Collapsed by default:
 
 - **Enabled**: toggle the redirect on or off.
-- **Raw Regex Match**: treat the incoming URI as a raw regular expression instead of using named parameters. Used for Retour imports and advanced matching.
+- **Raw Regex Match**: treat the incoming URI as a raw regular expression instead of using named parameters. Used for Retour imports and advanced matching. Patterns are evaluated with backticks as delimiters, and `^`/`$` are not added automatically.
 - **Priority**: higher values are matched first. Useful when multiple patterns could match the same URI.
 - **Start Date / End Date**: schedule when the redirect is active. Useful for time-limited campaigns or planned migrations.
 

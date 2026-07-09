@@ -41,7 +41,7 @@ class RedirectService extends Component
     public function matchesUri(Redirect $redirect, string $uri): bool
     {
         if ($redirect->regexMatch) {
-            return (bool)preg_match('`^' . $redirect->from . '$`i', $uri);
+            return (bool)preg_match('`' . $redirect->from . '`i', $uri);
         }
 
         if (str_contains($redirect->from, '<')) {
@@ -64,7 +64,7 @@ class RedirectService extends Component
         $testUri = Uri::strip($testUri);
 
         if ($regexMatch) {
-            $pattern = '`^' . $from . '$`i';
+            $pattern = '`' . $from . '`i';
             if (preg_match($pattern, $testUri, $matches)) {
                 return preg_replace_callback('/\$(\d+)/', function ($m) use ($matches) {
                     return $matches[(int)$m[1]] ?? '';

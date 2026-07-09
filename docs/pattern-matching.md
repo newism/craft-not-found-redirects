@@ -26,3 +26,19 @@ products/<id:\d+>  ->  shop/<id>
 blog/<year:\d{4}>/<month:\d{2}>/<slug>  ->  news/<year>/<month>/<slug>
 old/<path:.*>  ->  new/<path>
 ```
+
+## Raw Regex Match
+
+Enable **Raw Regex Match** when you want full control over regular expression behavior.
+
+- Patterns are passed directly to PHP regex with backticks as delimiters (for example: `` `blog/(.*)`i ``).
+- Do **not** include delimiters in the field value — enter only the pattern.
+- `^` and `$` are **not** added automatically. Add them yourself if you want to force a full-string match.
+- Destination URLs can use `$1`, `$2`, etc. from capture groups.
+
+Examples:
+
+```
+blog/(.*)  ->  news/$1
+^legacy/(.*)$  ->  archive/$1
+```

@@ -137,7 +137,7 @@ class NotFoundUriService extends Component
                 $destinationUrl = $entry->getUrl();
             }
         } elseif ($redirect->regexMatch) {
-            if (preg_match('`^' . $redirect->from . '$`i', $uri, $matches)) {
+            if (preg_match('`' . $redirect->from . '`i', $uri, $matches)) {
                 $destinationUrl = preg_replace_callback('/\$(\d+)/', fn($m) => $matches[(int)$m[1]] ?? '', $destinationUrl);
             }
         } elseif (str_contains($redirect->from, '<')) {

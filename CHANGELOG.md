@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added support for `444 — No Response (nginx)` redirect rules without a destination URL.
 - Added a sortable `Date Created` column to the redirects index table.
 
 ### Changed

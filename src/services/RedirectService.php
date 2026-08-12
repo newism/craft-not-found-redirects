@@ -116,16 +116,39 @@ class RedirectService extends Component
         // Normalize destination based on type
         if ($model->toType === 'entry') {
             $element = $model->getToElement();
-            if ($element && $element->uri) {
-                $model->to = $element->uri === Element::HOMEPAGE_URI ? '' : Uri::strip($element->uri);
+            if ($element) {
+                // Record which site the entry was resolved on if not already set.
+                if ($model->toElementSiteId === null && $element->siteId) {
+                    $model->toElementSiteId = (int)$element->siteId;
+                }
+
+                // A destination on a different site is a different domain, so cache an
+                // absolute URL. This keeps the target site's domain in the stored
+                // fallback and prevents the self-redirect/loop guards below from
+                // collapsing it to a same-site path (which would falsely collide with
+                // `from`). Same-site destinations stay as portable relative paths.
+                $redirectSiteId = $model->siteId ?? Craft::$app->getSites()->getPrimarySite()->id;
+                $destSiteId = $model->toElementSiteId ?? ($element->siteId ? (int)$element->siteId : null);
+                $isCrossSite = $destSiteId !== null && $destSiteId !== $redirectSiteId;
+
+                if ($isCrossSite) {
+                    $model->to = $element->getUrl() ?: ($element->uri ? Uri::strip($element->uri) : '');
+                } elseif ($element->uri) {
+                    $model->to = $element->uri === Element::HOMEPAGE_URI ? '' : Uri::strip($element->uri);
+                }
             }
         } elseif ($model->toType === 'url' && $model->to) {
-            foreach (Craft::$app->getSites()->getAllSites() as $site) {
-                $siteUrl = rtrim($site->getBaseUrl(), '/');
-                if ($siteUrl && str_starts_with($model->to, $siteUrl)) {
-                    $model->to = ltrim(substr($model->to, strlen($siteUrl)), '/') ?: '/';
-                    break;
-                }
+            // Only strip the base URL of the redirect's OWN site so the destination becomes a
+            // portable relative path. Absolute URLs pointing at a DIFFERENT site must stay absolute:
+            // stripping them would (a) collide with `from` and trip the self-redirect/loop guards,
+            // and (b) store a site-less relative path that resolves against the wrong site when the
+            // redirect fires. For a global (siteId === null) redirect, only the primary site is stripped.
+            $ownSite = $model->siteId
+                ? Craft::$app->getSites()->getSiteById($model->siteId)
+                : Craft::$app->getSites()->getPrimarySite();
+            $siteUrl = $ownSite ? rtrim($ownSite->getBaseUrl(), '/') : '';
+            if ($siteUrl && str_starts_with($model->to, $siteUrl)) {
+                $model->to = ltrim(substr($model->to, strlen($siteUrl)), '/') ?: '/';
             }
             if (!preg_match('#^https?://#i', $model->to)) {
                 $model->to = $model->to === '/' ? $model->to : Uri::strip($model->to);
@@ -136,12 +159,11 @@ class RedirectService extends Component
             return false;
         }
 
-        // Resolve destination path for self-redirect and loop detection
+        // Resolve destination path for self-redirect and loop detection.
+        // $model->to already holds the normalized destination: a relative path for
+        // same-site destinations, or an absolute URL for cross-site ones (which can
+        // never match the relative `from`, so cross-site redirects are allowed).
         $destinationPath = $model->to;
-        if ($model->toType === 'entry' && $model->toElementId) {
-            $element = $model->getToElement();
-            $destinationPath = $element ? Uri::strip($element->uri ?? '') : $model->to;
-        }
 
         if ($destinationPath && strcasecmp($model->from, $destinationPath) === 0) {
             $errorField = $model->toType === 'entry' ? 'toElementId' : 'to';

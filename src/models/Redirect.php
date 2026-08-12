@@ -34,6 +34,7 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
     public ?string $to = null;
     public ?string $toType = 'url';
     public ?int $toElementId = null;
+    public ?int $toElementSiteId = null;
     public int $statusCode = 302;
     public int $priority = 0;
     public bool $enabled = true;
@@ -81,7 +82,7 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
             [['to'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType !== 'entry'],
             [['toElementId'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType === 'entry'],
             [['toType'], 'in', 'range' => ['url', 'entry']],
-            [['siteId', 'statusCode', 'priority', 'hitCount', 'toElementId'], 'integer'],
+            [['siteId', 'statusCode', 'priority', 'hitCount', 'toElementId', 'toElementSiteId'], 'integer'],
             [['enabled', 'regexMatch', 'systemGenerated'], 'boolean'],
             [['statusCode'], 'in', 'range' => [301, 302, 307, 404, 410, 444]],
             [['from', 'to'], 'string', 'max' => 500],
@@ -244,7 +245,12 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
             return null;
         }
 
-        $this->_toElement = Craft::$app->getElements()->getElementById($this->toElementId);
+        // Resolve the entry against its chosen site so getUrl()/uri reflect that
+        // site's domain. Fall back to the redirect's own site, then Craft's
+        // default (current/primary) when no site has been stored yet.
+        $siteId = $this->toElementSiteId ?? $this->siteId;
+
+        $this->_toElement = Craft::$app->getElements()->getElementById($this->toElementId, null, $siteId);
 
         return $this->_toElement;
     }

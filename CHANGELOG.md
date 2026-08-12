@@ -1,5 +1,16 @@
 # Release Notes for 404 Redirects
 
+## 1.2.0 - 2026-08-12
+
+### Added
+
+- Entry-type redirect destinations can now target an entry on any site via a site menu in the entry selector, storing the chosen site in a new `toElementSiteId` column so the redirect resolves to that site's (cross-site) URL.
+
+### Fixed
+
+- Fixed a `URL`-type destination pointing at a different site being incorrectly rejected with "Redirect destination cannot be the same as the source." (and saved as a same-site relative path). Only the redirect's own site base URL is now stripped; cross-site destinations are stored as absolute URLs.
+- Fixed the runtime self-redirect guard suppressing a cross-site redirect (returning a 404) when the destination shared the same path as the source on a different domain. The guard now only applies when the destination is on the same host.
+
 ## 1.1.0 - 2026-07-09
 
 ### Added

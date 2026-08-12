@@ -85,7 +85,13 @@
                         elements: redirect.toElement ? [redirect.toElement] : [],
                         single: true,
                         sources: '*',
+                        showSiteMenu: true,
+                        criteria: { siteId: '*' },
                     } only %}
+                    {# Records which site the chosen entry belongs to; kept in sync by redirect-form.js #}
+                    {{ hiddenInput('toElementSiteId', redirect.toElementSiteId, {
+                        data: { field: 'toElementSiteId' },
+                    }) }}
                 </div>
             </div>
         {% endset %}

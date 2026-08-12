@@ -39,6 +39,7 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
     _initElementSelect: function () {
         const {form} = this;
         const toElementUrlInput = form.querySelector('[data-field="toElementUrl"] input');
+        const toElementSiteIdInput = form.querySelector('[data-field="toElementSiteId"]');
         let bound = false;
 
         function bind() {
@@ -53,10 +54,14 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
                 const el = ev.elements[0];
                 if (!el) {
                     toElementUrlInput.value = '';
+                    if (toElementSiteIdInput) toElementSiteIdInput.value = '';
                     return;
                 }
+                // Capture the site the entry was selected on so the destination
+                // resolves to that site's (possibly cross-site) domain.
+                if (toElementSiteIdInput) toElementSiteIdInput.value = el.siteId || '';
                 Craft.sendActionRequest('GET', 'not-found-redirects/redirects/element-url', {
-                    params: {elementId: el.id},
+                    params: {elementId: el.id, siteId: el.siteId || ''},
                 }).then((response) => {
                     toElementUrlInput.value = response.data && response.data.uri || '';
                 }).catch(() => {
@@ -65,6 +70,7 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
             });
             elementSelect.on('removeElements', () => {
                 toElementUrlInput.value = '';
+                if (toElementSiteIdInput) toElementSiteIdInput.value = '';
             });
         }
 
@@ -127,12 +133,16 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
 
             const data = {from, to, toType, testUris, regexMatch: regexMatch ? 1 : 0};
 
-            // If entry type, include the selected element ID
+            // If entry type, include the selected element ID and its site
             if (toType === 'entry') {
                 const elementSelect = $(form).find('.elementselect').data('elementSelect');
                 const selectedElements = elementSelect?.$elements;
                 if (selectedElements && selectedElements.length) {
                     data.toElementId = selectedElements.first().data('id');
+                }
+                const siteIdInput = form.querySelector('[data-field="toElementSiteId"]');
+                if (siteIdInput && siteIdInput.value) {
+                    data.toElementSiteId = siteIdInput.value;
                 }
             }
 

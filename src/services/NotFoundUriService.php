@@ -132,7 +132,12 @@ class NotFoundUriService extends Component
         $destinationUrl = $redirect->to ?: '/';
 
         if ($redirect->toType === 'entry' && $redirect->toElementId) {
-            $entry = Craft::$app->getElements()->getElementById($redirect->toElementId, null, $siteId);
+            // Resolve against the entry's chosen site so getUrl() yields the correct
+            // (possibly cross-site) domain. Fall back to the redirect's own site, then
+            // the request site. If it can't be resolved, the cached $redirect->to
+            // (absolute for cross-site destinations) is used as-is.
+            $entrySiteId = $redirect->toElementSiteId ?? $redirect->siteId ?? $siteId;
+            $entry = Craft::$app->getElements()->getElementById($redirect->toElementId, null, $entrySiteId);
             if ($entry?->getUrl()) {
                 $destinationUrl = $entry->getUrl();
             }
@@ -217,9 +222,13 @@ class NotFoundUriService extends Component
             $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $redirect->siteId ?? $siteId);
         }
 
-        // Guard against self-redirect at runtime
-        $destinationPath = Uri::strip(parse_url($destinationUrl, PHP_URL_PATH));
-        if (strcasecmp($request->getFullPath(), $destinationPath) === 0) {
+        // Guard against self-redirect at runtime — only when the destination is on the
+        // SAME host as the current request. A cross-site destination (different domain)
+        // that happens to share the same path is not a loop.
+        $destinationHost = parse_url($destinationUrl, PHP_URL_HOST);
+        $sameHost = !$destinationHost || strcasecmp($destinationHost, (string)$request->getHostName()) === 0;
+        $destinationPath = Uri::strip(parse_url($destinationUrl, PHP_URL_PATH) ?? '');
+        if ($sameHost && strcasecmp($request->getFullPath(), $destinationPath) === 0) {
             Craft::warning("Redirect loop detected: {$redirect->from} → {$destinationUrl} (same as current path)", NotFoundRedirects::LOG);
             return;
         }

@@ -3,7 +3,9 @@
 namespace newism\notfoundredirects\jobs;
 
 use Craft;
+use craft\base\Element;
 use craft\helpers\Db;
+use craft\helpers\UrlHelper;
 use craft\queue\BaseJob;
 use DateTime;
 use newism\notfoundredirects\db\Table;
@@ -13,8 +15,12 @@ use newism\notfoundredirects\NotFoundRedirects;
 use newism\notfoundredirects\query\RedirectQuery;
 
 /**
- * Updates the cached `to` URI on all entry-type redirects pointing to a given element.
+ * Updates the cached `to` URI on entry-type redirects pointing to a given element.
  * Pushed after element save or URI update to keep destinations current.
+ *
+ * Only redirects whose destination site matches the saved site are updated —
+ * a single entry has one URI per site, so a save on site A must not overwrite
+ * the cached destination of a redirect targeting the entry on site B.
  */
 class UpdateDestinationUris extends BaseJob
 {
@@ -31,36 +37,68 @@ class UpdateDestinationUris extends BaseJob
     {
         $db = Craft::$app->getDb();
         $now = Db::prepareDateForDb(new DateTime());
-        $newUri = Uri::strip($this->newUri);
+        $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
+
+        // The homepage URI is stored as `__home__` — cache it as '' like saveRedirect() does
+        $newUri = $this->newUri === Element::HOMEPAGE_URI ? '' : Uri::strip($this->newUri);
 
         // Find all redirects pointing to this element
         $query = RedirectQuery::find();
         $query->andWhere(['toElementId' => $this->elementId, 'toType' => 'entry']);
+        /** @var Redirect[] $redirects */
         $redirects = $query->all();
 
         if (!$redirects) {
             return;
         }
 
-        // Update the cached `to` URI
-        $db->createCommand()->update(
-            Table::REDIRECTS,
-            ['to' => $newUri, 'dateUpdated' => $now],
-            ['toElementId' => $this->elementId, 'toType' => 'entry'],
-        )->execute();
-
-        // Add system notes to affected redirects where the URI actually changed
         $noteService = NotFoundRedirects::getInstance()->getNoteService();
+        $updated = 0;
+
         foreach ($redirects as $redirect) {
-            if (strcasecmp($redirect->to, $newUri) !== 0) {
-                $noteService->addNote(
-                    $redirect->id,
-                    "Destination URI updated: /{$redirect->to} → /{$newUri}",
-                    systemGenerated: true,
-                );
+            // Redirects without a stored destination site resolve against their own site
+            $destSiteId = $redirect->toElementSiteId ?? $redirect->siteId ?? $primarySiteId;
+            if ($destSiteId !== $this->siteId) {
+                continue;
             }
+
+            // Match saveRedirect()'s normalization: cross-site destinations cache an
+            // absolute URL (the target site's domain/prefix must travel with the value),
+            // same-site destinations cache a portable relative path.
+            $ownSiteId = $redirect->siteId ?? $primarySiteId;
+            $newTo = $destSiteId === $ownSiteId
+                ? $newUri
+                : UrlHelper::siteUrl($newUri, null, null, $this->siteId);
+
+            if (strcasecmp($redirect->to ?? '', $newTo) === 0) {
+                continue;
+            }
+
+            $db->createCommand()->update(
+                Table::REDIRECTS,
+                ['to' => $newTo, 'dateUpdated' => $now],
+                ['id' => $redirect->id],
+            )->execute();
+
+            $noteService->addNote(
+                $redirect->id,
+                'Destination URI updated: ' . $this->displayTo($redirect->to) . ' → ' . $this->displayTo($newTo),
+                systemGenerated: true,
+            );
+            $updated++;
         }
 
-        Craft::info("Updated " . count($redirects) . " redirect destination(s) for element #{$this->elementId} → /{$newUri}", NotFoundRedirects::LOG);
+        if ($updated > 0) {
+            Craft::info("Updated {$updated} redirect destination(s) for element #{$this->elementId} (site #{$this->siteId})", NotFoundRedirects::LOG);
+        }
+    }
+
+    private function displayTo(?string $to): string
+    {
+        if ($to !== null && preg_match('#^https?://#i', $to)) {
+            return $to;
+        }
+
+        return '/' . Uri::strip($to);
     }
 }

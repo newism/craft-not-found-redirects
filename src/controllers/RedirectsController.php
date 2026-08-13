@@ -3,6 +3,7 @@
 namespace newism\notfoundredirects\controllers;
 
 use Craft;
+use craft\base\Element;
 use craft\enums\Color;
 use craft\helpers\Cp;
 use craft\helpers\DateTimeHelper;
@@ -431,9 +432,14 @@ JS, $vars);
         $siteId = $siteIdParam ? (int)$siteIdParam : null;
         $element = Craft::$app->getElements()->getElementById($elementId, null, $siteId);
 
+        $uri = $element?->uri;
+        if ($uri === Element::HOMEPAGE_URI) {
+            $uri = '';
+        }
+
         return $this->asSuccess(data: [
             'url' => $element?->getUrl() ?? '',
-            'uri' => $element?->uri ? '/' . $element->uri : '',
+            'uri' => $element ? '/' . $uri : '',
         ]);
     }
 

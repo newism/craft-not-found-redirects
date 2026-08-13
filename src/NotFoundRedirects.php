@@ -50,7 +50,7 @@ class NotFoundRedirects extends Plugin
 {
     public const LOG = 'not-found-redirects';
 
-    public string $schemaVersion = '1.2.0';
+    public string $schemaVersion = '1.2.1';
     public bool $hasCpSection = true;
 
     public function getNoteService(): NoteService

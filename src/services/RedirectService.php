@@ -12,6 +12,7 @@ use craft\helpers\AdminTable;
 use craft\helpers\Cp;
 use craft\helpers\Db;
 use craft\helpers\Html;
+use craft\helpers\UrlHelper;
 use craft\web\UrlRule;
 use DateTime;
 use Illuminate\Support\Collection;
@@ -145,7 +146,7 @@ class RedirectService extends Component
             if ($siteUrl && str_starts_with($model->to, $siteUrl)) {
                 $model->to = ltrim(substr($model->to, strlen($siteUrl)), '/') ?: '/';
             }
-            if (!preg_match('#^https?://#i', $model->to)) {
+            if (!UrlHelper::isAbsoluteUrl($model->to) && !UrlHelper::isProtocolRelativeUrl($model->to)) {
                 $model->to = $model->to === '/' ? $model->to : Uri::strip($model->to);
             }
         }

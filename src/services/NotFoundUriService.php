@@ -227,7 +227,7 @@ class NotFoundUriService extends Component
         // system, so resolve against that site; everything else resolves against
         // the redirect's own site (falling back to the request site). Live-resolved
         // entry URLs are already complete and skip this.
-        if (!$isResolvedUrl && !preg_match('#^(https?:)?//#i', $destinationUrl)) {
+        if (!$isResolvedUrl && !UrlHelper::isAbsoluteUrl($destinationUrl) && !UrlHelper::isProtocolRelativeUrl($destinationUrl)) {
             $destSiteId = $redirect->toType === 'entry'
                 ? ($redirect->toElementSiteId ?? $redirect->siteId ?? $siteId)
                 : ($redirect->siteId ?? $siteId);

@@ -3,6 +3,7 @@
 namespace newism\notfoundredirects\helpers;
 
 use Craft;
+use craft\helpers\UrlHelper;
 
 /**
  * URI normalization helpers.
@@ -32,7 +33,7 @@ class Uri
      */
     public static function extractPath(string $url): string
     {
-        if (!preg_match('#^https?://#i', $url)) {
+        if (!UrlHelper::isAbsoluteUrl($url) && !UrlHelper::isProtocolRelativeUrl($url)) {
             return self::strip($url);
         }
 

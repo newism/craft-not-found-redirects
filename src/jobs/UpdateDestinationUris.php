@@ -5,6 +5,7 @@ namespace newism\notfoundredirects\jobs;
 use Craft;
 use craft\base\Element;
 use craft\helpers\Db;
+use craft\helpers\UrlHelper;
 use craft\queue\BaseJob;
 use DateTime;
 use newism\notfoundredirects\db\Table;
@@ -91,7 +92,7 @@ class UpdateDestinationUris extends BaseJob
 
     private function displayTo(?string $to): string
     {
-        if ($to !== null && preg_match('#^https?://#i', $to)) {
+        if ($to !== null && UrlHelper::isAbsoluteUrl($to)) {
             return $to;
         }
 

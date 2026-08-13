@@ -98,13 +98,11 @@ class RedirectService extends Component
         // Normalize from — strip leading/trailing slashes
         $model->from = Uri::strip($model->from);
 
-        // Strip the site's base path prefix if the user pasted a full path (e.g., en/old-blog → old-blog)
+        // Strip the site's base path prefix if the user pasted a full path (e.g., en/old-blog → old-blog).
+        // Only for site-specific redirects — on an all-sites redirect a leading segment
+        // matching some site's prefix could be legitimate content on another site.
         if ($model->siteId) {
-            $site = Craft::$app->getSites()->getSiteById($model->siteId);
-            $basePath = $site ? trim(parse_url($site->getBaseUrl(), PHP_URL_PATH) ?? '', '/') : '';
-            if ($basePath && str_starts_with($model->from, $basePath . '/')) {
-                $model->from = substr($model->from, strlen($basePath) + 1);
-            }
+            $model->from = Uri::stripSiteBasePath($model->from, $model->siteId);
         }
 
         // 404 Block, 410 Gone, and 444 No Response have no destination

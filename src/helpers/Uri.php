@@ -2,6 +2,8 @@
 
 namespace newism\notfoundredirects\helpers;
 
+use Craft;
+
 /**
  * URI normalization helpers.
  *
@@ -37,6 +39,33 @@ class Uri
         $path = parse_url($url, PHP_URL_PATH);
 
         return self::strip($path ?? '');
+    }
+
+    /**
+     * Strip a site's base path prefix from a URI, converting a browser-style
+     * path into the site-relative form used for matching (e.g. "en/old-blog"
+     * → "old-blog" for a site based at /en/).
+     *
+     * With a site ID, only that site's base path is considered. Without one,
+     * every site's base path is tried — mirroring runtime matching, where each
+     * request has its own site's prefix stripped before the plugin sees it.
+     */
+    public static function stripSiteBasePath(string $uri, ?int $siteId = null): string
+    {
+        $uri = self::strip($uri);
+
+        $sites = $siteId !== null
+            ? array_filter([Craft::$app->getSites()->getSiteById($siteId)])
+            : Craft::$app->getSites()->getAllSites();
+
+        foreach ($sites as $site) {
+            $basePath = trim(parse_url($site->getBaseUrl() ?? '', PHP_URL_PATH) ?? '', '/');
+            if ($basePath && ($uri === $basePath || str_starts_with($uri, $basePath . '/'))) {
+                return substr($uri, strlen($basePath) + 1);
+            }
+        }
+
+        return $uri;
     }
 
     /**

@@ -384,6 +384,8 @@ JS, $vars);
         $toElementSiteId = $this->request->getParam('toElementSiteId');
         $testUris = $this->request->getRequiredParam('testUris');
         $regexMatch = (bool)$this->request->getParam('regexMatch', false);
+        $siteIdParam = $this->request->getParam('siteId');
+        $redirectSiteId = $siteIdParam ? (int)$siteIdParam : null;
 
         // Resolve entry URL if toType is entry
         if ($toType === 'entry' && $toElementId) {
@@ -400,7 +402,11 @@ JS, $vars);
         $lines = array_filter(array_map('trim', preg_split('/\r?\n/', $testUris)));
 
         foreach ($lines as $uri) {
-            $uri = Uri::strip($uri);
+            // Normalize each line the way the runtime sees a request: full URLs
+            // reduced to their path, then the site base path prefix stripped
+            // (the redirect's site, or any site's for an all-sites redirect) —
+            // so browser/analytics paths like /en/foo test as the runtime matches.
+            $uri = Uri::stripSiteBasePath(Uri::extractPath($uri), $redirectSiteId);
             $destination = $service->testMatch($from, $to, $uri, $regexMatch);
             $matched = $destination !== null;
             $results[] = [

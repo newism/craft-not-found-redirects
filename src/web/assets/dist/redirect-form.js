@@ -133,6 +133,13 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
 
             const data = {from, to, toType, testUris, regexMatch: regexMatch ? 1 : 0};
 
+            // Include the redirect's site so test URIs get the same site base
+            // path stripping the runtime applies to requests (e.g. /en/foo → foo)
+            const siteSelect = form.querySelector('[name$="[siteId]"]') || form.querySelector('[name="siteId"]');
+            if (siteSelect && siteSelect.value) {
+                data.siteId = siteSelect.value;
+            }
+
             // If entry type, include the selected element ID and its site
             if (toType === 'entry') {
                 const elementSelect = $(form).find('.elementselect').data('elementSelect');

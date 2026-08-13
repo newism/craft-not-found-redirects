@@ -5,7 +5,6 @@ namespace newism\notfoundredirects\jobs;
 use Craft;
 use craft\base\Element;
 use craft\helpers\Db;
-use craft\helpers\UrlHelper;
 use craft\queue\BaseJob;
 use DateTime;
 use newism\notfoundredirects\db\Table;
@@ -62,13 +61,10 @@ class UpdateDestinationUris extends BaseJob
                 continue;
             }
 
-            // Match saveRedirect()'s normalization: cross-site destinations cache an
-            // absolute URL (the target site's domain/prefix must travel with the value),
-            // same-site destinations cache a portable relative path.
-            $ownSiteId = $redirect->siteId ?? $primarySiteId;
-            $newTo = $destSiteId === $ownSiteId
-                ? $newUri
-                : UrlHelper::siteUrl($newUri, null, null, $this->siteId);
+            // Match saveRedirect()'s normalization: `to` holds the entry's URI in the
+            // destination site's coordinate system — the site itself lives in
+            // toElementSiteId, so no URL building (and no web-vs-console ambiguity).
+            $newTo = $newUri;
 
             if (strcasecmp($redirect->to ?? '', $newTo) === 0) {
                 continue;

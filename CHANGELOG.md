@@ -10,8 +10,9 @@
 
 - Fixed a `URL`-type destination pointing at a different site being incorrectly rejected with "Redirect destination cannot be the same as the source." (and saved as a same-site relative path). Only the redirect's own site base URL is now stripped; cross-site destinations are stored as absolute URLs.
 - Fixed the runtime self-redirect guard suppressing a cross-site redirect (returning a 404) when the destination shared the same path as the source on a different domain. The guard now only applies when the destination is on the same host.
-- Fixed the `UpdateDestinationUris` queue job overwriting the cached destination of every redirect pointing at an element, regardless of site. It now only updates redirects whose destination site matches the saved site, and caches absolute URLs for cross-site destinations (matching save behavior).
-- Fixed homepage destinations being cached as the literal `__home__` token by the `UpdateDestinationUris` job (the cached-fallback redirect would send visitors to `/__home__`). Existing `__home__` values are normalized to `''` by a migration, and the destination URL preview on the redirect form now shows `/` instead of `/__home__`.
+- Fixed the `UpdateDestinationUris` queue job overwriting the cached destination of every redirect pointing at an element, regardless of site. It now only updates redirects whose destination site matches the saved site.
+- Fixed homepage destinations being cached as the literal `__home__` token by the `UpdateDestinationUris` job (the cached-fallback redirect would send visitors to `/__home__`). The destination URL preview on the redirect form now shows `/` instead of `/__home__`.
+- Entry-type destinations now always cache `to` as the destination site's relative URI — the destination site lives in `toElementSiteId`, not in the string — and the redirect resolves the URI against that site at request time. This works for absolute, root-relative, and subfolder site base URLs alike. A migration normalizes existing cached values (including stray `__home__` tokens).
 
 ## 1.1.0 - 2026-07-09
 

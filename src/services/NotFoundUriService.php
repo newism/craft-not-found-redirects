@@ -130,16 +130,21 @@ class NotFoundUriService extends Component
         // Pattern tokens: use Craft's RedirectRule for <param> substitution
         // Exact: return `to` as-is
         $destinationUrl = $redirect->to ?: '/';
+        $isResolvedUrl = false;
 
         if ($redirect->toType === 'entry' && $redirect->toElementId) {
-            // Resolve against the entry's chosen site so getUrl() yields the correct
-            // (possibly cross-site) domain. Fall back to the redirect's own site, then
-            // the request site. If it can't be resolved, the cached $redirect->to
-            // (absolute for cross-site destinations) is used as-is.
+            // Resolve against the entry's chosen site so getUrl() yields that site's
+            // URL. Fall back to the redirect's own site, then the request site. If the
+            // entry can't be resolved, the cached $redirect->to (the destination
+            // site's relative URI) is resolved against the destination site below.
             $entrySiteId = $redirect->toElementSiteId ?? $redirect->siteId ?? $siteId;
             $entry = Craft::$app->getElements()->getElementById($redirect->toElementId, null, $entrySiteId);
             if ($entry?->getUrl()) {
+                // getUrl() is already a complete URL for the destination site —
+                // absolute, or root-relative when the site's base URL is hostless.
+                // Either way it must not be re-resolved below.
                 $destinationUrl = $entry->getUrl();
+                $isResolvedUrl = true;
             }
         } elseif ($redirect->regexMatch) {
             if (preg_match('`' . $redirect->from . '`i', $uri, $matches)) {
@@ -217,9 +222,16 @@ class NotFoundUriService extends Component
             return;
         }
 
-        // Resolve relative paths to full site URLs (multi-site subfolder prefixes)
-        if (!preg_match('#^(https?:)?//#i', $destinationUrl)) {
-            $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $redirect->siteId ?? $siteId);
+        // Resolve relative paths to full site URLs (multi-site subfolder prefixes).
+        // Entry-type destinations are cached in the DESTINATION site's coordinate
+        // system, so resolve against that site; everything else resolves against
+        // the redirect's own site (falling back to the request site). Live-resolved
+        // entry URLs are already complete and skip this.
+        if (!$isResolvedUrl && !preg_match('#^(https?:)?//#i', $destinationUrl)) {
+            $destSiteId = $redirect->toType === 'entry'
+                ? ($redirect->toElementSiteId ?? $redirect->siteId ?? $siteId)
+                : ($redirect->siteId ?? $siteId);
+            $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $destSiteId);
         }
 
         // Guard against self-redirect at runtime — only when the destination is on the

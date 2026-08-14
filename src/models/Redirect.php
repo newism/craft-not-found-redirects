@@ -17,9 +17,11 @@ use craft\helpers\DateTimeHelper;
 use craft\helpers\Html;
 use craft\helpers\UrlHelper;
 use DateTime;
+use newism\notfoundredirects\helpers\Uri;
 use newism\notfoundredirects\query\NoteQuery;
 use newism\notfoundredirects\query\RedirectQuery;
 use newism\notfoundredirects\web\assets\RedirectChipAsset;
+use yii\validators\Validator;
 
 class Redirect extends Model implements Actionable, Chippable, Statusable, CpEditable
 {
@@ -78,9 +80,10 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
     protected function defineRules(): array
     {
         return [
-            [['from'], 'required'],
-            [['to'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType !== 'entry'],
-            [['toElementId'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType === 'entry'],
+            [['from'], 'required', 'message' => 'Incoming URI cannot be blank.'],
+            [['from'], 'uriNotPrefixedWithSiteBaseUrl'],
+            [['to'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType !== 'entry', 'message' => 'Redirect destination URL cannot be blank.'],
+            [['toElementId'], 'required', 'when' => fn() => !in_array($this->statusCode, [404, 410, 444]) && $this->toType === 'entry', 'message' => 'Redirect destination entry cannot be blank.'],
             [['toType'], 'in', 'range' => ['url', 'entry']],
             [['siteId', 'statusCode', 'priority', 'hitCount', 'toElementId', 'toElementSiteId'], 'integer'],
             [['enabled', 'regexMatch', 'systemGenerated'], 'boolean'],
@@ -88,6 +91,38 @@ class Redirect extends Model implements Actionable, Chippable, Statusable, CpEdi
             [['from', 'to'], 'string', 'max' => 500],
             [['startDate', 'endDate'], 'safe'],
         ];
+    }
+
+    public function uriNotPrefixedWithSiteBaseUrl($attribute, $params, Validator $validator): void
+    {
+        $value = $this->$attribute;
+        if (!$value) {
+            return;
+        }
+
+        $sites = Craft::$app->getSites()->getAllSites();
+        if (count($sites) <= 1) {
+            return;
+        }
+
+        // If a saved from still begins with a path segment matching another site's base path, surface a validation
+        // warning: "This looks like it includes {site}'s /en prefix — did you mean old-blog on {site}?" Catches cases
+        // where normalisation guessed wrong or was bypassed.
+        foreach ($sites as $site) {
+            if ($site->id === $this->siteId) {
+                continue;
+            }
+
+            if (Uri::stripSiteBasePath($value, $site->id) === $value) {
+                continue;
+            }
+
+            $this->addError($attribute, Craft::t('not-found-redirects', 'The {attribute} value looks like it includes {site}’s base URL ({baseUrl}) - did you mean to create this redirect on {site}?', [
+                'attribute' => $this->getAttributeLabel($attribute),
+                'site' => $site->name,
+                'baseUrl' => $site->getBaseUrl(),
+            ]));
+        }
     }
 
     public function extraFields(): array

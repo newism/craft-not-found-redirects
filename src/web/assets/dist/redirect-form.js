@@ -15,6 +15,8 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
         this.form = document.querySelector(formSelector);
 
         this._initStatusCodeToggle();
+        this._initFromValueNormalisationAndSiteSelection();
+        this._initFromPrefixDescription();
         this._initElementSelect();
         this._initToTypeToggle();
         this._initTestUrl();
@@ -33,6 +35,120 @@ Newism.notFoundRedirects.RedirectForm = Garnish.Base.extend({
                 destinationFields.classList.toggle('hidden', statusSelect.value === '404' || statusSelect.value === '410' || statusSelect.value === '444');
             });
         }
+    },
+
+    // ── Incoming URI value base path removal and site selection ─────
+    _initFromValueNormalisationAndSiteSelection: function () {
+        const {form} = this;
+        const incomingUri = form.querySelector('[data-field="from"] input');
+        const prefixContainer = form.querySelector('[data-from-prefix]');
+        const siteSelect = form.querySelector('[data-field="fromPrefix"] select');
+
+        if (!incomingUri || !prefixContainer || !siteSelect) return;
+
+        // Create a map of the site prefixes keyed by site ID with the base path prefix and the data-site-absolute-url
+        const sitePrefixes = Array.from(prefixContainer.children).reduce((acc, el) => {
+            const siteId = el.dataset.siteId;
+            if (siteId) {
+                acc[siteId] = {
+                    baseUrl: el.textContent.trim(),
+                    absoluteUrl: el.dataset.siteAbsoluteUrl || '',
+                };
+            }
+            return acc;
+        }, {});
+
+        // Plain objects always enumerate integer-like keys (site IDs) in
+        // ascending numeric order, so sorting into an object would silently
+        // discard this order. Keep it as an array of [siteId, prefix] pairs.
+        const orderedSitePrefixes = Object.entries(sitePrefixes).sort(
+            (a, b) => b[1].absoluteUrl.length - a[1].absoluteUrl.length
+        );
+
+        // Craft normalises the base path prefix to always start and end with a slash,
+        // but the incoming URI value may not start with a slash so we need to account for that
+        const findMatchingPrefix = (uri, site) => {
+            const prefix = site.baseUrl;
+            const prefixWithoutStartSlash = prefix.startsWith('/') ? prefix.slice(1) : prefix;
+            let match = null;
+            if (incomingUri.value.startsWith(site.absoluteUrl)) {
+                match = site.absoluteUrl;
+            } else if (incomingUri.value.startsWith(site.baseUrl)) {
+                match = site.baseUrl;
+            } else if (incomingUri.value.startsWith(prefixWithoutStartSlash)) {
+                match = prefixWithoutStartSlash;
+            }
+
+            return match;
+        }
+
+        const normaliseValue = () => {
+            if (!incomingUri.value) {
+                return;
+            }
+
+            const selectedSiteId = siteSelect.value;
+            // No site selected so check if the URL starts with a prefix, remove it and select the site
+            if (selectedSiteId === '') {
+                for (const [siteId, site] of orderedSitePrefixes) {
+                    const match = findMatchingPrefix(incomingUri.value, site);
+                    if (match) {
+                        incomingUri.value = incomingUri.value.slice(match.length);
+                        siteSelect.value = siteId;
+                        // Trigger change event to update the prefix description
+                        $(siteSelect).trigger('change');
+                        break;
+                    }
+                }
+            } else {
+                // Site selected, ensure the prefix is removed from the incoming URI
+                const site = sitePrefixes[selectedSiteId] || '';
+                if (site) {
+                    const match = findMatchingPrefix(incomingUri.value, site);
+                    if (match) {
+                        incomingUri.value = incomingUri.value.slice(match.length);
+                    }
+                }
+            }
+        };
+
+        // Craft's native select "toggle" behaviour fires on the same change
+        // event and swaps the .hidden classes — defer a frame so we read
+        // them after it updates, not before.
+        incomingUri.addEventListener('change', () => {
+            requestAnimationFrame(normaliseValue);
+        });
+
+        normaliseValue();
+    },
+
+    // ── Incoming URI Site-Prefix Description (a11y) ──────────────────
+    _initFromPrefixDescription: function () {
+        const {form} = this;
+        const siteSelect = form.querySelector('[data-field="fromPrefix"] select');
+        const prefixContainer = form.querySelector('[data-from-prefix]');
+        const descEl = form.querySelector('[data-from-prefix-desc]');
+
+        if (!siteSelect || !prefixContainer || !descEl) return;
+
+        const updateDescription = () => {
+            const visiblePrefix = Array.from(prefixContainer.children)
+                .find((el) => !el.classList.contains('hidden'));
+            const prefixText = visiblePrefix ? visiblePrefix.textContent.trim() : '';
+
+            descEl.textContent = prefixText && prefixText !== '*/'
+                ? Craft.t('not-found-redirects', 'Path is relative to {prefix}.', {prefix: prefixText})
+                : Craft.t('not-found-redirects', 'Path is relative to the selected site’s base URL.');
+        };
+
+        // Craft's native select "toggle" behaviour fires on the same change
+        // event and swaps the .hidden classes — defer a frame so we read
+        // them after it updates, not before.
+        siteSelect.addEventListener('change', () => {
+            requestAnimationFrame(updateDescription);
+        });
+
+        updateDescription();
     },
 
     // ── Element Select → Readonly URL Preview ───────────────────────

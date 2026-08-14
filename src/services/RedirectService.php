@@ -103,7 +103,7 @@ class RedirectService extends Component
         // Only for site-specific redirects — on an all-sites redirect a leading segment
         // matching some site's prefix could be legitimate content on another site.
         if ($model->siteId) {
-            $model->from = Uri::stripSiteBasePath($model->from, $model->siteId);
+            $model->from = Uri::stripSiteBasePath(Uri::extractPath($model->from), $model->siteId);
         }
 
         // 404 Block, 410 Gone, and 444 No Response have no destination

@@ -22,11 +22,31 @@
     padding-block: 6px;
     padding-inline: 9px;
     white-space: nowrap;
+    max-width: 40%;
+    min-width: 0;
+}
+
+/* text-overflow only truncates the element actually holding the text —
+   the toggled site-prefix divs, not the flex label wrapping them — and
+   each needs min-width: 0 to be allowed to shrink below its own content
+   width, since flex items default to min-width: auto. */
+.url-field-container .url-field-label > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .url-field-container .url-field-label + .text {
     border-end-start-radius: 0;
     border-start-start-radius: 0;
+    /* Craft's .fullwidth class sets width: 100%, which — as a flex item —
+       makes the input claim the entire row as its flex-basis and squeeze
+       the label down to near-zero regardless of the label's own content
+       length. Let it grow into the remaining space instead. */
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
 }
 
 /* ── Note cards ──────────────────────────────────────────────── */

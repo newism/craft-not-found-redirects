@@ -4,6 +4,8 @@
 
 <div>
 
+    <div data-attribute="*" data-error-key="*" class="error-container"></div>
+
     {% if sites|length > 1 %}
         {{ forms.selectField({
             label: 'Site'|t('app'),
@@ -15,6 +17,9 @@
             options: [{ label: 'All Sites'|t('app'), value: '' }]|merge(
                 sites|map(s => { label: s.name, value: s.id })
             ),
+            toggle: true,
+            targetPrefix: 'fromPrefix-',
+            data: { field: 'fromPrefix' },
         }) }}
     {% endif %}
 
@@ -37,17 +42,39 @@
     }) }}
 
     {% set fromInput %}
-        {{ forms.text({
-            id: 'from',
-            name: 'from',
-            value: redirect.from,
-            class: 'fullwidth',
+        <div class="url-field-container">
+            <div class="url-field-label light" aria-hidden="true" data-from-prefix>
+                <div id="fromPrefix-" data-site-id="" class="{{ (redirect.siteId ?? '') != '' ? 'hidden' }}">
+                    */
+                </div>
+                {% for site in sites %}
+                    <div id="fromPrefix-{{ site.id }}" data-site-id="{{ site.id }}" data-site-absolute-url="{{ absolute_url(site.getBaseUrl()) }}" class="{{ (redirect.siteId ?? '') != site.id ? 'hidden' }}">
+                        {{ site.getBaseUrl() }}
+                    </div>
+                {% endfor %}
+            </div>
+            {{ forms.text({
+                id: 'from',
+                name: 'from',
+                value: redirect.from,
+                class: 'fullwidth',
+                describedBy: 'from-desc',
+            }) }}
+        </div>
+
+        {{ tag('span', {
+            id: 'from-desc',
+            hidden: true,
+            data: { 'from-prefix-desc': true },
+            text: 'Path is relative to the selected site’s base URL.'|t('not-found-redirects'),
         }) }}
+        <div data-attribute="from" data-error-key="from" class="error-container"></div>
     {% endset %}
     {{ forms.field({
         label: 'Incoming URI'|t('not-found-redirects'),
-        instructions: 'The path relative to the site root (without the site prefix). For example, enter <code>old-blog</code> not <code>en/old-blog</code>.'|t('not-found-redirects'),
+        instructions: 'The path relative to the site root (without the site prefix).'|t('not-found-redirects'),
         id: 'from',
+        data: { field: 'from' },
         required: true,
         errors: redirect.getErrors('from'),
     }, fromInput) }}
@@ -85,9 +112,17 @@
                         elements: redirect.toElement ? [redirect.toElement] : [],
                         single: true,
                         sources: '*',
+                        showSiteMenu: true,
+                        criteria: { siteId: '*' },
                     } only %}
+                    {# Records which site the chosen entry belongs to; kept in sync by redirect-form.js #}
+                    {{ hiddenInput('toElementSiteId', redirect.toElementSiteId, {
+                        data: { field: 'toElementSiteId' },
+                    }) }}
                 </div>
             </div>
+            <div data-attribute="toElementId" data-error-key="toElementId" class="error-container"></div>
+            <div data-attribute="to" data-error-key="to" class="error-container"></div>
         {% endset %}
         {{ forms.field({
             label: 'Redirect Destination'|t('not-found-redirects'),

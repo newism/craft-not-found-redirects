@@ -130,11 +130,21 @@ class NotFoundUriService extends Component
         // Pattern tokens: use Craft's RedirectRule for <param> substitution
         // Exact: return `to` as-is
         $destinationUrl = $redirect->to ?: '/';
+        $isResolvedUrl = false;
 
         if ($redirect->toType === 'entry' && $redirect->toElementId) {
-            $entry = Craft::$app->getElements()->getElementById($redirect->toElementId, null, $siteId);
+            // Resolve against the entry's chosen site so getUrl() yields that site's
+            // URL. Fall back to the redirect's own site, then the request site. If the
+            // entry can't be resolved, the cached $redirect->to (the destination
+            // site's relative URI) is resolved against the destination site below.
+            $entrySiteId = $redirect->toElementSiteId ?? $redirect->siteId ?? $siteId;
+            $entry = Craft::$app->getElements()->getElementById($redirect->toElementId, null, $entrySiteId);
             if ($entry?->getUrl()) {
+                // getUrl() is already a complete URL for the destination site —
+                // absolute, or root-relative when the site's base URL is hostless.
+                // Either way it must not be re-resolved below.
                 $destinationUrl = $entry->getUrl();
+                $isResolvedUrl = true;
             }
         } elseif ($redirect->regexMatch) {
             if (preg_match('`' . $redirect->from . '`i', $uri, $matches)) {
@@ -212,14 +222,25 @@ class NotFoundUriService extends Component
             return;
         }
 
-        // Resolve relative paths to full site URLs (multi-site subfolder prefixes)
-        if (!preg_match('#^(https?:)?//#i', $destinationUrl)) {
-            $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $redirect->siteId ?? $siteId);
+        // Resolve relative paths to full site URLs (multi-site subfolder prefixes).
+        // Entry-type destinations are cached in the DESTINATION site's coordinate
+        // system, so resolve against that site; everything else resolves against
+        // the redirect's own site (falling back to the request site). Live-resolved
+        // entry URLs are already complete and skip this.
+        if (!$isResolvedUrl && !UrlHelper::isAbsoluteUrl($destinationUrl) && !UrlHelper::isProtocolRelativeUrl($destinationUrl)) {
+            $destSiteId = $redirect->toType === 'entry'
+                ? ($redirect->toElementSiteId ?? $redirect->siteId ?? $siteId)
+                : ($redirect->siteId ?? $siteId);
+            $destinationUrl = UrlHelper::siteUrl($destinationUrl, null, null, $destSiteId);
         }
 
-        // Guard against self-redirect at runtime
-        $destinationPath = Uri::strip(parse_url($destinationUrl, PHP_URL_PATH));
-        if (strcasecmp($request->getFullPath(), $destinationPath) === 0) {
+        // Guard against self-redirect at runtime — only when the destination is on the
+        // SAME host as the current request. A cross-site destination (different domain)
+        // that happens to share the same path is not a loop.
+        $destinationHost = parse_url($destinationUrl, PHP_URL_HOST);
+        $sameHost = !$destinationHost || strcasecmp($destinationHost, (string)$request->getHostName()) === 0;
+        $destinationPath = Uri::strip(parse_url($destinationUrl, PHP_URL_PATH) ?? '');
+        if ($sameHost && strcasecmp($request->getFullPath(), $destinationPath) === 0) {
             Craft::warning("Redirect loop detected: {$redirect->from} → {$destinationUrl} (same as current path)", NotFoundRedirects::LOG);
             return;
         }

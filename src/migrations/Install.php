@@ -38,6 +38,7 @@ class Install extends Migration
             'to' => $this->string(500)->notNull()->defaultValue(''),
             'toType' => $this->string(10)->notNull()->defaultValue('url'),
             'toElementId' => $this->integer()->null()->defaultValue(null),
+            'toElementSiteId' => $this->integer()->null()->defaultValue(null),
             'statusCode' => $this->integer()->notNull()->defaultValue(302),
             'priority' => $this->integer()->notNull()->defaultValue(0),
             'enabled' => $this->boolean()->notNull()->defaultValue(true),
@@ -103,6 +104,7 @@ class Install extends Migration
         $this->createIndex(null, Table::REDIRECTS, ['priority'], false);
         $this->createIndex(null, Table::REDIRECTS, ['systemGenerated'], false);
         $this->createIndex(null, Table::REDIRECTS, ['toElementId'], false);
+        $this->createIndex(null, Table::REDIRECTS, ['toElementSiteId'], false);
         $this->createIndex(null, Table::REDIRECTS, ['elementId'], false);
         $this->createIndex(null, Table::REDIRECTS, ['createdById'], false);
 
@@ -150,6 +152,18 @@ class Install extends Migration
             Table::REDIRECTS,
             ['toElementId'],
             CraftTable::ELEMENTS,
+            ['id'],
+            'SET NULL',
+            'CASCADE'
+        );
+
+        // Redirects -> Sites (destination entry's site). SET NULL on delete so
+        // removing a site downgrades to the graceful fallback, not deletion.
+        $this->addForeignKey(
+            null,
+            Table::REDIRECTS,
+            ['toElementSiteId'],
+            CraftTable::SITES,
             ['id'],
             'SET NULL',
             'CASCADE'

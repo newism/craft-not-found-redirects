@@ -3,6 +3,7 @@
 namespace newism\notfoundredirects\controllers;
 
 use Craft;
+use craft\base\Element;
 use craft\enums\Color;
 use craft\helpers\Cp;
 use craft\helpers\DateTimeHelper;
@@ -319,9 +320,13 @@ JS, $vars);
         }
         $redirect->toElementId = $toElementId ? (int)$toElementId : null;
 
+        $toElementSiteId = $this->request->getBodyParam('toElementSiteId');
+        $redirect->toElementSiteId = $toElementSiteId ? (int)$toElementSiteId : null;
+
         // Clear irrelevant fields based on type
         if ($redirect->toType !== 'entry') {
             $redirect->toElementId = null;
+            $redirect->toElementSiteId = null;
         }
 
         if (!NotFoundRedirects::getInstance()->getRedirectService()->saveRedirect($redirect)) {
@@ -376,12 +381,16 @@ JS, $vars);
         $to = $this->request->getParam('to', '');
         $toType = $this->request->getParam('toType', 'url');
         $toElementId = $this->request->getParam('toElementId');
+        $toElementSiteId = $this->request->getParam('toElementSiteId');
         $testUris = $this->request->getRequiredParam('testUris');
         $regexMatch = (bool)$this->request->getParam('regexMatch', false);
+        $siteIdParam = $this->request->getParam('siteId');
+        $redirectSiteId = $siteIdParam ? (int)$siteIdParam : null;
 
         // Resolve entry URL if toType is entry
         if ($toType === 'entry' && $toElementId) {
-            $element = Craft::$app->getElements()->getElementById((int)$toElementId);
+            $siteId = $toElementSiteId ? (int)$toElementSiteId : null;
+            $element = Craft::$app->getElements()->getElementById((int)$toElementId, null, $siteId);
             if ($element) {
                 $to = $element->getUrl() ?? $to;
             }
@@ -393,7 +402,11 @@ JS, $vars);
         $lines = array_filter(array_map('trim', preg_split('/\r?\n/', $testUris)));
 
         foreach ($lines as $uri) {
-            $uri = Uri::strip($uri);
+            // Normalize each line the way the runtime sees a request: full URLs
+            // reduced to their path, then the site base path prefix stripped
+            // (the redirect's site, or any site's for an all-sites redirect) —
+            // so browser/analytics paths like /en/foo test as the runtime matches.
+            $uri = Uri::stripSiteBasePath(Uri::extractPath($uri), $redirectSiteId);
             $destination = $service->testMatch($from, $to, $uri, $regexMatch);
             $matched = $destination !== null;
             $results[] = [
@@ -421,11 +434,18 @@ JS, $vars);
         $this->requirePermission('not-found-redirects:manageRedirects');
 
         $elementId = (int)$this->request->getRequiredParam('elementId');
-        $element = Craft::$app->getElements()->getElementById($elementId);
+        $siteIdParam = $this->request->getParam('siteId');
+        $siteId = $siteIdParam ? (int)$siteIdParam : null;
+        $element = Craft::$app->getElements()->getElementById($elementId, null, $siteId);
+
+        $uri = $element?->uri;
+        if ($uri === Element::HOMEPAGE_URI) {
+            $uri = '';
+        }
 
         return $this->asSuccess(data: [
             'url' => $element?->getUrl() ?? '',
-            'uri' => $element?->uri ? '/' . $element->uri : '',
+            'uri' => $element ? '/' . $uri : '',
         ]);
     }
 

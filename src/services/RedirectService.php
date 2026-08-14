@@ -12,6 +12,7 @@ use craft\helpers\AdminTable;
 use craft\helpers\Cp;
 use craft\helpers\Db;
 use craft\helpers\Html;
+use craft\helpers\UrlHelper;
 use craft\web\UrlRule;
 use DateTime;
 use Illuminate\Support\Collection;
@@ -98,13 +99,11 @@ class RedirectService extends Component
         // Normalize from — strip leading/trailing slashes
         $model->from = Uri::strip($model->from);
 
-        // Strip the site's base path prefix if the user pasted a full path (e.g., en/old-blog → old-blog)
+        // Strip the site's base path prefix if the user pasted a full path (e.g., en/old-blog → old-blog).
+        // Only for site-specific redirects — on an all-sites redirect a leading segment
+        // matching some site's prefix could be legitimate content on another site.
         if ($model->siteId) {
-            $site = Craft::$app->getSites()->getSiteById($model->siteId);
-            $basePath = $site ? trim(parse_url($site->getBaseUrl(), PHP_URL_PATH) ?? '', '/') : '';
-            if ($basePath && str_starts_with($model->from, $basePath . '/')) {
-                $model->from = substr($model->from, strlen($basePath) + 1);
-            }
+            $model->from = Uri::stripSiteBasePath(Uri::extractPath($model->from), $model->siteId);
         }
 
         // 404 Block, 410 Gone, and 444 No Response have no destination
@@ -114,20 +113,40 @@ class RedirectService extends Component
         }
 
         // Normalize destination based on type
+        $isCrossSiteEntry = false;
         if ($model->toType === 'entry') {
             $element = $model->getToElement();
-            if ($element && $element->uri) {
-                $model->to = $element->uri === Element::HOMEPAGE_URI ? '' : Uri::strip($element->uri);
-            }
-        } elseif ($model->toType === 'url' && $model->to) {
-            foreach (Craft::$app->getSites()->getAllSites() as $site) {
-                $siteUrl = rtrim($site->getBaseUrl(), '/');
-                if ($siteUrl && str_starts_with($model->to, $siteUrl)) {
-                    $model->to = ltrim(substr($model->to, strlen($siteUrl)), '/') ?: '/';
-                    break;
+            if ($element) {
+                // Record which site the entry was resolved on if not already set.
+                if ($model->toElementSiteId === null && $element->siteId) {
+                    $model->toElementSiteId = (int)$element->siteId;
+                }
+
+                // `to` always caches the entry's URI in the DESTINATION site's coordinate
+                // system — the site identity lives in `toElementSiteId`, never in the
+                // string. The runtime resolves the URI against that site, which works
+                // for absolute, root-relative, and subfolder base URLs alike.
+                if ($element->uri !== null) {
+                    $model->to = $element->uri === Element::HOMEPAGE_URI ? '' : Uri::strip($element->uri);
                 }
             }
-            if (!preg_match('#^https?://#i', $model->to)) {
+
+            $redirectSiteId = $model->siteId ?? Craft::$app->getSites()->getPrimarySite()->id;
+            $isCrossSiteEntry = $model->toElementSiteId !== null && $model->toElementSiteId !== $redirectSiteId;
+        } elseif ($model->toType === 'url' && $model->to) {
+            // Only strip the base URL of the redirect's OWN site so the destination becomes a
+            // portable relative path. Absolute URLs pointing at a DIFFERENT site must stay absolute:
+            // stripping them would (a) collide with `from` and trip the self-redirect/loop guards,
+            // and (b) store a site-less relative path that resolves against the wrong site when the
+            // redirect fires. For a global (siteId === null) redirect, only the primary site is stripped.
+            $ownSite = $model->siteId
+                ? Craft::$app->getSites()->getSiteById($model->siteId)
+                : Craft::$app->getSites()->getPrimarySite();
+            $siteUrl = $ownSite ? rtrim($ownSite->getBaseUrl(), '/') : '';
+            if ($siteUrl && str_starts_with($model->to, $siteUrl)) {
+                $model->to = ltrim(substr($model->to, strlen($siteUrl)), '/') ?: '/';
+            }
+            if (!UrlHelper::isAbsoluteUrl($model->to) && !UrlHelper::isProtocolRelativeUrl($model->to)) {
                 $model->to = $model->to === '/' ? $model->to : Uri::strip($model->to);
             }
         }
@@ -136,20 +155,19 @@ class RedirectService extends Component
             return false;
         }
 
-        // Resolve destination path for self-redirect and loop detection
+        // Self-redirect and loop detection compare site-relative paths, so they only
+        // apply when source and destination are on the same site. A cross-site entry
+        // destination sharing the source's path is a different URL, not a loop.
+        // (URL-type cross-site destinations are absolute strings and never collide.)
         $destinationPath = $model->to;
-        if ($model->toType === 'entry' && $model->toElementId) {
-            $element = $model->getToElement();
-            $destinationPath = $element ? Uri::strip($element->uri ?? '') : $model->to;
-        }
 
-        if ($destinationPath && strcasecmp($model->from, $destinationPath) === 0) {
-            $errorField = $model->toType === 'entry' ? 'toElementId' : 'to';
-            $model->addError($errorField, 'Redirect destination cannot be the same as the source.');
-            return false;
-        }
+        if ($destinationPath && !$isCrossSiteEntry) {
+            if (strcasecmp($model->from, $destinationPath) === 0) {
+                $errorField = $model->toType === 'entry' ? 'toElementId' : 'to';
+                $model->addError($errorField, 'Redirect destination cannot be the same as the source.');
+                return false;
+            }
 
-        if ($destinationPath) {
             $loopError = $this->detectLoop($model->from, Uri::strip($destinationPath));
             if ($loopError) {
                 $errorField = $model->toType === 'entry' ? 'toElementId' : 'to';

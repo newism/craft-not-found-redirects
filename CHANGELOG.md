@@ -1,5 +1,21 @@
 # Release Notes for 404 Redirects
 
+## 1.2.0 - 2026-08-12
+
+### Added
+
+- Entry-type redirect destinations can now target an entry on any site via a site menu in the entry selector, storing the chosen site in a new `toElementSiteId` column so the redirect resolves to that site's (cross-site) URL.
+
+### Fixed
+
+- Fixed a `URL`-type destination pointing at a different site being incorrectly rejected with "Redirect destination cannot be the same as the source." (and saved as a same-site relative path). Only the redirect's own site base URL is now stripped; cross-site destinations are stored as absolute URLs.
+- Fixed the runtime self-redirect guard suppressing a cross-site redirect (returning a 404) when the destination shared the same path as the source on a different domain. The guard now only applies when the destination is on the same host.
+- Fixed the `UpdateDestinationUris` queue job overwriting the cached destination of every redirect pointing at an element, regardless of site. It now only updates redirects whose destination site matches the saved site.
+- Fixed homepage destinations being cached as the literal `__home__` token by the `UpdateDestinationUris` job (the cached-fallback redirect would send visitors to `/__home__`). The destination URL preview on the redirect form now shows `/` instead of `/__home__`.
+- Fixed non-HTTP destination URLs (e.g. `mailto:`, `tel:`) being mangled by relative-path resolution at save and redirect time. URL-shape checks now use Craft's `UrlHelper::isAbsoluteUrl()`/`isProtocolRelativeUrl()`, which recognize any scheme.
+- Fixed the Test URLs feature disagreeing with runtime matching on multi-site installs: test URIs are now normalized the way the runtime sees requests — full URLs reduced to their path and the site base path prefix stripped (e.g. `/en/foo-bar` now correctly matches a Second Site redirect with `from: foo-bar`).
+- Entry-type destinations now always cache `to` as the destination site's relative URI — the destination site lives in `toElementSiteId`, not in the string — and the redirect resolves the URI against that site at request time. This works for absolute, root-relative, and subfolder site base URLs alike. A migration normalizes existing cached values (including stray `__home__` tokens).
+
 ## 1.1.0 - 2026-07-09
 
 ### Added

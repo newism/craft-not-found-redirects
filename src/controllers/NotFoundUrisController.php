@@ -270,7 +270,6 @@ class NotFoundUrisController extends Controller
     public function actionDelete(): ?Response
     {
         $this->requirePostRequest();
-        $this->requireAcceptsJson();
         $this->requirePermission('not-found-redirects:delete404s');
 
         $id = (int)$this->request->getRequiredBodyParam('id');

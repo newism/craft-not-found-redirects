@@ -348,7 +348,6 @@ JS, $vars);
     public function actionDelete(): ?Response
     {
         $this->requirePostRequest();
-        $this->requireAcceptsJson();
         $this->requirePermission('not-found-redirects:deleteRedirects');
 
         $id = (int)$this->request->getRequiredBodyParam('id');

@@ -39,6 +39,7 @@ use newism\notfoundredirects\widgets\NotFoundChartWidget;
 use newism\notfoundredirects\widgets\NotFoundCoverageWidget;
 use newism\notfoundredirects\widgets\NotFoundWidget;
 use Psr\Log\LogLevel;
+use yii\base\ExitException;
 
 /**
  * 404 Redirects plugin
@@ -198,7 +199,7 @@ class NotFoundRedirects extends Plugin
         Craft::getLogger()->dispatcher->targets[] = new MonologTarget([
             'name' => self::LOG,
             'categories' => [self::LOG],
-            'level' => LogLevel::INFO,
+            'level' => LogLevel::DEBUG,
             'logContext' => false,
             'allowLineBreaks' => false,
             'maxFiles' => 14,
@@ -235,7 +236,13 @@ class NotFoundRedirects extends Plugin
                 ErrorHandler::class,
                 ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION,
                 function (ExceptionEvent $event) {
-                    $this->getNotFoundUriService()->handleException($event);
+                    try {
+                        $this->getNotFoundUriService()->handleException($event);
+                    } catch (ExitException $e) {
+                        throw $e;
+                    } catch (\Throwable $e) {
+                        Craft::error($e, self::LOG);
+                    }
                 }
             );
         }
@@ -245,7 +252,11 @@ class NotFoundRedirects extends Plugin
             Gc::class,
             Gc::EVENT_RUN,
             function () {
-                $this->getNotFoundUriService()->gc();
+                try {
+                    $this->getNotFoundUriService()->gc();
+                } catch (\Throwable $e) {
+                    Craft::error($e, self::LOG);
+                }
             }
         );
 

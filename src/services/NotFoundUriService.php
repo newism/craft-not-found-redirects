@@ -30,6 +30,7 @@ use newism\notfoundredirects\query\RedirectQuery;
 use newism\notfoundredirects\query\ReferrerQuery;
 use Twig\Error\RuntimeError;
 use yii\data\Pagination;
+use yii\db\Exception as DbException;
 use yii\db\Expression;
 use yii\web\HttpException;
 use yii\web\Response;
@@ -269,6 +270,10 @@ class NotFoundUriService extends Component
         $model->hitLastTime ??= new DateTime();
 
         if (!$model->validate()) {
+            $modelErrors = implode('; ', array_map(fn($attr, $errs) => "$attr - " . implode(', ', $errs), array_keys($model->getErrors()), $model->getErrors()));
+            $truncatedUri = mb_strlen($model->uri) > 150 ? mb_substr($model->uri, 0, 150) : $model->uri;
+            Craft::warning("404 not logged because it is not valid: {$truncatedUri}, Errors: {$modelErrors}", NotFoundRedirects::LOG);
+
             return false;
         }
 
@@ -296,23 +301,33 @@ class NotFoundUriService extends Component
         $notFoundQuery->select(['id']);
         $model->id = (int)$notFoundQuery->scalar();
 
+        // Sanitise and truncate the referrer to fit the varchar(500) column
+        $referrer = Referrer::normalize($referrer);
+
         if ($referrer && $model->id) {
-            $db->createCommand()->upsert(
-                Table::REFERRERS,
-                [
-                    'notFoundId' => $model->id,
-                    'referrer' => $referrer,
-                    'hitCount' => $data['hitCount'],
-                    'hitLastTime' => $data['hitLastTime'],
-                ],
-                [
-                    'hitCount' => new Expression(
-                        Table::REFERRERS . '.[[hitCount]] + :hits',
-                        [':hits' => $data['hitCount']]
-                    ),
-                    'hitLastTime' => $data['hitLastTime'],
-                ],
-            )->execute();
+            // Referrer::normalize() should have made the value safe to store, so this is a backstop:
+            // a referrer we still can't persist must not break the request, since the 404 itself is
+            // already logged at this point.
+            try {
+                $db->createCommand()->upsert(
+                    Table::REFERRERS,
+                    [
+                        'notFoundId' => $model->id,
+                        'referrer' => $referrer,
+                        'hitCount' => $data['hitCount'],
+                        'hitLastTime' => $data['hitLastTime'],
+                    ],
+                    [
+                        'hitCount' => new Expression(
+                            Table::REFERRERS . '.[[hitCount]] + :hits',
+                            [':hits' => $data['hitCount']]
+                        ),
+                        'hitLastTime' => $data['hitLastTime'],
+                    ],
+                )->execute();
+            } catch (DbException $e) {
+                Craft::error("Failed to upsert referrer for 404: {$model->uri} (siteId: {$model->siteId}) — " . $e->getMessage(), NotFoundRedirects::LOG);
+            }
 
             // Probabilistic trim — 1% chance to cap referrers for this 404
             if (mt_rand(1, 100) === 1) {

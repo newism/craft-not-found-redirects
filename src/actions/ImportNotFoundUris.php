@@ -11,6 +11,7 @@ use newism\notfoundredirects\models\ImportResult;
 use newism\notfoundredirects\models\NotFoundUri;
 use newism\notfoundredirects\models\Referrer;
 use newism\notfoundredirects\NotFoundRedirects;
+use yii\db\Exception as DbException;
 
 class ImportNotFoundUris extends ImportAction
 {
@@ -75,12 +76,23 @@ class ImportNotFoundUris extends ImportAction
 
             // Persist nested referrers from JSON import
             foreach ($model->getReferrers() as $ref) {
-                if (!$ref->id && $ref->referrer) {
+                if ($ref->id) {
+                    continue;
+                }
+
+                // Imported referrers are untrusted too — they may exceed the varchar(500) column
+                // or carry invalid characters from whatever site produced the export
+                $referrer = Referrer::normalize($ref->referrer);
+                if (!$referrer) {
+                    continue;
+                }
+
+                try {
                     Craft::$app->getDb()->createCommand()->upsert(
                         Table::REFERRERS,
                         [
                             'notFoundId' => $model->id,
-                            'referrer' => $ref->referrer,
+                            'referrer' => $referrer,
                             'hitCount' => $ref->hitCount,
                             'hitLastTime' => Db::prepareDateForDb($ref->hitLastTime ?? new DateTime()),
                         ],
@@ -89,6 +101,9 @@ class ImportNotFoundUris extends ImportAction
                             'hitLastTime' => Db::prepareDateForDb($ref->hitLastTime ?? new DateTime()),
                         ],
                     )->execute();
+                } catch (DbException $e) {
+                    // Skip the referrer rather than aborting the whole import — the 404 is already saved
+                    Craft::error("Failed to import referrer for 404: {$model->uri} (siteId: {$model->siteId}) — " . $e->getMessage(), NotFoundRedirects::LOG);
                 }
             }
         }

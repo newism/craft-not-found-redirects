@@ -1,5 +1,19 @@
 # Release Notes for 404 Redirects
 
+## 1.1.1 - 2026-09-24
+
+### Fixed
+
+- Fixed an uncaught exception when a request's `Referer` header exceeded the 500-character referrer column, which could return a 500 error in place of the 404 page. Referrers are now sanitised and truncated before being stored.
+- A referrer that still can't be stored no longer prevents the 404 itself from being logged.
+- Fixed the same issue on the 404 import path, where a long or malformed referrer could abort an in-progress import.
+- Guarded 404 handling and garbage collection so an unexpected plugin error can no longer escape into Craft's error handler and turn a 404 into a fatal error.
+
+### Changed
+
+- 404s rejected by validation, such as a URI over 500 characters, now log a warning instead of a debug message, so they are visible outside of Dev Mode.
+- Adjusted the plugin log level to include debug messages.
+
 ## 1.1.0 - 2026-07-09
 
 ### Added
